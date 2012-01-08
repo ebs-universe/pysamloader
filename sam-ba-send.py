@@ -124,7 +124,11 @@ def xmodem_sendf(args, samba):
         samba.efc_ewp(pno)
         print "Page done - " + str(pno)
         pno = pno + 1
-    samba.efc_setgpnvm(1)
+    if args.g is True:
+        print "Setting GPNVM bit to run from flash"
+        samba.efc_setgpnvm(1)
+    else:
+        print "Not setting GPNVM bit. Invoke with -g to have that happen."
 
 def process_page(args, samba):
     data = args.filename.read(args.psize)
@@ -146,28 +150,29 @@ def process_page(args, samba):
 def main():
     parser = argparse.ArgumentParser(description="\
             Send a program to an Atmel SAM chip using SAM-BA over UART")
+    parser.add_argument('-g', action='store_true',
+                        help="Set GPNVM bit when done writing")
     parser.add_argument('filename', metavar='file',
                         type=file,
                         help="File to be send to the chip")
-    parser.add_argument('-port', metavar='port',
+    parser.add_argument('--port', metavar='port',
                         default="/dev/ttyUSB0",
                         help="Port on which SAM-BA is listening")
-    parser.add_argument('-baud', metavar='baut',
+    parser.add_argument('--baud', metavar='baut',
                         type=int, default=115200,
                         help="Baud rate of serial communication")
-    parser.add_argument('-csize', metavar='csize',
+    parser.add_argument('--csize', metavar='csize',
                         type=int, default=128,
                         help="Size of the chucks used for xmodem transmission")
-    parser.add_argument('-psize', metavar='psize',
+    parser.add_argument('--psize', metavar='psize',
                         type=int, default=256,
                         help="Size of a page to be written to at once")
-    parser.add_argument('-spno', metavar='spno',
+    parser.add_argument('--spno', metavar='spno',
                         type=int, default=0,
                         help="Start flash page number")
-    parser.add_argument('-saddress', metavar='saddress',
+    parser.add_argument('--saddress', metavar='saddress',
                         default='00080000',
                         help="Start address of flash plane")
-
     args = parser.parse_args()
     samba = SamBAConnection(args)
     #print(samba.read_word('400E0800'))
