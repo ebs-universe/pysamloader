@@ -4,6 +4,7 @@ import serial
 from xmodem import *
 import argparse
 import logging
+import sys
 try:
         from cStringIO import StringIO
 except:
@@ -21,8 +22,9 @@ class SamBAConnection(object):
         try:
             self.ser.open()
         except:
-            print "Unable to open serial port.\
-                   \nCheck your connections and try again."
+            logging.error("Unable to open serial port.\
+                         \nCheck your connections and try again.")
+            sys.exit(1)
         if self.ser.isOpen():
             self.make_connection()
             self.args = args
@@ -47,7 +49,7 @@ class SamBAConnection(object):
     def write_word(self, address, contents):
         if self.ser.isOpen():
             self.flush_all()
-            print "Writing at " +address+ " : " +contents
+            logging.debug("Writing at " +address+ " : " +contents)
             self.ser.write("W"+address+','+contents+'#')
             return self.retrieve_response()
         else:
@@ -57,7 +59,7 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.flush_all()
             msg = "w"+address+',#'
-            print msg
+            logging.debug("Reading word with command : "+msg)
             self.ser.write(msg)
             sleep(1)
             return self.retrieve_response().strip()
@@ -68,11 +70,11 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.flush_all()
             msg = "S"+address+',#'
-            print msg
+            logging.debug("Starting send file with command : "+ msg)
             self.ser.write(msg)
             char = ''
             while char is not 'C':
-                print "Waiting for CRC"
+                logging.info("Waiting for CRC")
                 char = self.ser.read(1)
             return
 
@@ -92,7 +94,7 @@ class SamBAConnection(object):
 
     def efc_rstat(self):
         efstatus = self.read_word('400E0808')
-        print efstatus[8:]
+        logging.debug("EFC Status : "+ efstatus[8:])
         return (efstatus[8:] == "01")
 
     def efc_setgpnvm(self, bno):
@@ -118,29 +120,29 @@ def xmodem_sendf(args, samba):
             status = samba.efc_rstat()
         adr = int(args.saddress, 16)+pno*args.psize
         adrstr = hex(adr)[2:].zfill(8)
-        print "Start Address of page " + str(pno) + " : " + adrstr
+        logging.info("Start Address of page " + str(pno) + " : " + adrstr)
         samba.xm_init_sf(adrstr)
         stat = process_page(args, samba)
         samba.efc_ewp(pno)
-        print "Page done - " + str(pno)
+        logging.info("Page done - " + str(pno))
         pno = pno + 1
     if args.g is True:
-        print "Setting GPNVM bit to run from flash"
+        logging.info("Setting GPNVM bit to run from flash")
         samba.efc_setgpnvm(1)
     else:
-        print "Not setting GPNVM bit. Invoke with -g to have that happen."
+        logging.warning("Not setting GPNVM bit.\
+                         \nInvoke with -g to have that happen.")
 
 def process_page(args, samba):
     data = args.filename.read(args.psize)
     if len(data) == args.psize:
         status = 1
     else:
-        print len(data)
         if len(data) < args.psize:
             data += "\255"*(args.psize-len(data))
         status = 0
-    print len(data)
-    print hexlify(data) + ' CEND\n'
+    logging.debug(len(data))
+    logging.debug('Sending file chunk : \n'+ hexlify(data)+ ' CEND\n')
     sendbuf = StringIO(data)
     modem = XMODEM(samba.xm_getc, samba.xm_putc)
     modem.send(sendbuf, quiet=1)
@@ -152,6 +154,8 @@ def main():
             Send a program to an Atmel SAM chip using SAM-BA over UART")
     parser.add_argument('-g', action='store_true',
                         help="Set GPNVM bit when done writing")
+    parser.add_argument('-v', action='store_true',
+                        help="Verbose debug information")
     parser.add_argument('filename', metavar='file',
                         type=file,
                         help="File to be send to the chip")
@@ -174,10 +178,14 @@ def main():
                         default='00080000',
                         help="Start address of flash plane")
     args = parser.parse_args()
+    if args.v:
+        logging.basicConfig(format='%(levelname)s:%(message)s',
+                            level=logging.DEBUG)
+    else:
+        logging.basicConfig(format='%(levelname)s:%(message)s',
+                            level=logging.INFO)
     samba = SamBAConnection(args)
-    #print(samba.read_word('400E0800'))
     xmodem_sendf(args, samba)
 
 if __name__ == "__main__":
-    logging.basicConfig()
     main()
