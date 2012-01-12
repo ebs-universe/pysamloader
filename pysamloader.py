@@ -114,6 +114,7 @@ class SamBAConnection(object):
 def raw_sendf(args, samba):
     stat = 1
     pno = args.spno
+    binf = open(args.filename, "r")
     while stat:
         status = samba.efc_rstat()
         while not status:
@@ -122,7 +123,7 @@ def raw_sendf(args, samba):
 
         padr = int(args.saddress, 16)+(pno*args.psize)
         logging.debug("Start Address of page " + str(pno) + " : " + hex(padr))
-        stat = raw_process_page(args, samba, padr)
+        stat = raw_process_page(args, samba, padr, binf)
         samba.efc_ewp(pno)
         logging.info("Page done - "+str(pno))
         pno = pno + 1
@@ -172,8 +173,8 @@ def xm_process_page(args, samba):
     sendbuf.close()
     return status
 
-def raw_process_page(args, samba, padr):
-    data = args.filename.read(args.psize)
+def raw_process_page(args, samba, padr, binf):
+    data = binf.read(args.psize)
     if len(data) == args.psize:
         status = 1
     else:
@@ -187,11 +188,11 @@ def raw_process_page(args, samba, padr):
         samba.write_word(adrstr, hexlify(data[i:i+4]))
     return status
 
-def verify(args, samba):
-    args.filename.seek(0)
+def verify(args, samba): 
+    binf = open(args.filename, "r")
     errors = 0
     address = int(args.saddress, 16) + (args.spno * args.psize)
-    bytes = args.filename.read(4)
+    bytes = binf.read(4)
     while bytes:
         rval = samba.read_word(hex(address)[2:].zfill(8))
         if not rval.upper()[2:] == hexlify(bytes).upper():
@@ -200,7 +201,7 @@ def verify(args, samba):
         else:
             logging.debug("Verfied Word at "+ hex(address)+ "-" + rval + ' ' + hexlify(bytes))
         address = address + 4
-        bytes = args.filename.read(4)
+        bytes = binf.read(4)
     logging.info ("Verification Complete. Words with Errors : " + str(errors))
 
 def main():
@@ -213,7 +214,6 @@ def main():
     parser.add_argument('-c', action='store_true',
                         help="Verify Only")
     parser.add_argument('filename', metavar='file',
-                        type=file,
                         help="File to be send to the chip")
     parser.add_argument('--port', metavar='port',
                         default="/dev/ttyUSB0",
@@ -243,7 +243,7 @@ def main():
     samba = SamBAConnection(args)
     if args.c is False:
         raw_sendf(args, samba)
-
+    samba.make_connection()
     errors = verify(args, samba)
 
 if __name__ == "__main__":
