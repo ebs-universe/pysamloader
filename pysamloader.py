@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from time import sleep
 from binascii import hexlify
 import serial
@@ -61,7 +63,6 @@ class SamBAConnection(object):
             msg = "w"+address+',#'
             logging.debug("Reading word with command : "+msg)
             self.ser.write(msg)
-            sleep(1)
             return self.retrieve_response().strip()
         else:
             return ''
@@ -110,6 +111,28 @@ class SamBAConnection(object):
                 status = self.efc_rstat()
         return
 
+def raw_sendf(args, samba):
+    stat = 1
+    pno = args.spno
+    while stat:
+        status = samba.efc_rstat()
+        while not status:
+            sleep(0.01)
+            status = samba.efc_rstat()
+
+        padr = int(args.saddress, 16)+(pno*args.psize)
+        logging.debug("Start Address of page " + str(pno) + " : " + hex(padr))
+        stat = raw_process_page(args, samba, padr)
+        samba.efc_ewp(pno)
+        logging.info("Page done - "+str(pno))
+        pno = pno + 1
+    if args.g is True:
+        logging.info("Setting GPNVM bit to run from flash")
+        samba.efc_setgpnvm(1)
+    else:
+        logging.warning("Not setting GPNVM bit.\
+                         \nInvoke with -g to have that happen.")
+
 def xmodem_sendf(args, samba):
     stat = 1
     pno = args.spno
@@ -122,7 +145,7 @@ def xmodem_sendf(args, samba):
         adrstr = hex(adr)[2:].zfill(8)
         logging.info("Start Address of page " + str(pno) + " : " + adrstr)
         samba.xm_init_sf(adrstr)
-        stat = process_page(args, samba)
+        stat = xm_process_page(args, samba)
         samba.efc_ewp(pno)
         logging.info("Page done - " + str(pno))
         pno = pno + 1
@@ -133,7 +156,7 @@ def xmodem_sendf(args, samba):
         logging.warning("Not setting GPNVM bit.\
                          \nInvoke with -g to have that happen.")
 
-def process_page(args, samba):
+def xm_process_page(args, samba):
     data = args.filename.read(args.psize)
     if len(data) == args.psize:
         status = 1
@@ -149,6 +172,37 @@ def process_page(args, samba):
     sendbuf.close()
     return status
 
+def raw_process_page(args, samba, padr):
+    data = args.filename.read(args.psize)
+    if len(data) == args.psize:
+        status = 1
+    else:
+        if len(data) < args.psize:
+            data += "\255"*(args.psize-len(data))
+        status = 0
+    logging.debug(len(data))
+    logging.debug('Sending file chunk : \n' + hexlify(data) + 'CEND\n')
+    for i in range(0, 256, 4):
+        adrstr = hex(padr+i)[2:].zfill(8)
+        samba.write_word(adrstr, hexlify(data[i:i+4]))
+    return status
+
+def verify(args, samba):
+    args.filename.seek(0)
+    errors = 0
+    address = int(args.saddress, 16) + (args.spno * args.psize)
+    bytes = args.filename.read(4)
+    while bytes:
+        rval = samba.read_word(hex(address)[2:].zfill(8))
+        if not rval.upper()[2:] == hexlify(bytes).upper():
+            logging.warning("Verification Failed at "+hex(address) + "-" + rval +' '+ hexlify(bytes))
+            errors = errors + 1
+        else:
+            logging.debug("Verfied Word at "+ hex(address)+ "-" + rval + ' ' + hexlify(bytes))
+        address = address + 4
+        bytes = args.filename.read(4)
+    logging.info ("Verification Complete. Words with Errors : " + str(errors))
+
 def main():
     parser = argparse.ArgumentParser(description="\
             Send a program to an Atmel SAM chip using SAM-BA over UART")
@@ -156,6 +210,8 @@ def main():
                         help="Set GPNVM bit when done writing")
     parser.add_argument('-v', action='store_true',
                         help="Verbose debug information")
+    parser.add_argument('-c', action='store_true',
+                        help="Verify Only")
     parser.add_argument('filename', metavar='file',
                         type=file,
                         help="File to be send to the chip")
@@ -185,7 +241,10 @@ def main():
         logging.basicConfig(format='%(levelname)s:%(message)s',
                             level=logging.INFO)
     samba = SamBAConnection(args)
-    xmodem_sendf(args, samba)
+    if args.c is False:
+        raw_sendf(args, samba)
+
+    errors = verify(args, samba)
 
 if __name__ == "__main__":
     main()
