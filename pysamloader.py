@@ -1,5 +1,20 @@
 #!/usr/bin/python
 
+# Copyright (c) 2012 Chintalagiri Shashank
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from time import sleep
 from binascii import hexlify
 import serial
@@ -18,6 +33,7 @@ class SamBAConnection(object):
     ser = serial.Serial()
 
     def __init__(self, args):
+        """ Opens the serial port for the SAM-BA connection """
         self.ser.baudrate = args.baud
         self.ser.port = args.port
         self.ser.timeout = 5
@@ -33,22 +49,35 @@ class SamBAConnection(object):
             sleep(1)
 
     def retrieve_response(self):
+        """ Read a response from SAM-BA, delimited by > """
         char = ''
         data = ''
-        while char is not '>':
+        while char and (char is not '>'):
             data += char
             char = self.ser.read(1)
         return data
 
     def make_connection(self):
+        """ Test connection to SAM-BA by reading its version """
         self.ser.write("V#")
-        print self.retrieve_response()
+        resp = self.retrieve_response()
+        if resp:
+            print resp
+            return
+        else:
+            raise Exception("SAM-BA did not respond to V#")
 
     def flush_all(self):
+        """ Flush serial communication buffers  """
         self.ser.flushInput()
         self.ser.flushOutput()
 
     def write_word(self, address, contents):
+        """ 
+        Write 4 bytes at a specific address. 
+        Both address and contents expected to be character strings
+        
+        """
         if self.ser.isOpen():
             self.flush_all()
             logging.debug("Writing at " +address+ " : " +contents)
@@ -58,6 +87,11 @@ class SamBAConnection(object):
             return None
 
     def read_word(self, address):
+        """ 
+        Read 4 bytes from a specific address. 
+        Both address and returned contents are character strings
+        
+        """
         if self.ser.isOpen():
             self.flush_all()
             msg = "w"+address+',#'
@@ -68,6 +102,7 @@ class SamBAConnection(object):
             return ''
 
     def xm_init_sf(self, address):
+        """ Initialize XMODEM file send to specified address """
         if self.ser.isOpen():
             self.flush_all()
             msg = "S"+address+',#'
@@ -80,25 +115,57 @@ class SamBAConnection(object):
             return
 
     def xm_init_rf(self, address, size):
+        """ Initialize XMODEM file read from specified address """
         pass
 
     def xm_getc(self, size, timeout=1):
+        """ getc function for the xmodem protocol """
         return self.ser.read(size)
 
     def xm_putc(self, data, timeout=1):
+        """ putc function for the xmodem protocol """
         self.ser.write(data)
         return len(data)
 
     def efc_ewp(self, pno):
+        """ EFC trigger write page. Pno is an integer """
         self.write_word('400E0804', '5A'+hex(pno)[2:].zfill(4)+'03')
         pass
 
     def efc_rstat(self):
+        """ 
+        Read EFC status. 
+        Returns True if EFC is ready, False if busy. 
+        
+        """
         efstatus = self.read_word('400E0808')
         logging.debug("EFC Status : "+ efstatus[8:])
         return (efstatus[8:] == "01")
 
+    def efc_cleargpnvm(self, bno):
+        """
+        EFC Fucntion to clear specified GPNVM bit.
+        bno is an integer
+
+        """
+        if self.ser.isOpen():
+            status = self.efc_rstat()
+            while not status:
+                sleep(0.01)
+                status = self.efc_rstat()
+            self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+'0C')
+            status = self.efc_rstat()
+            while not status:
+                sleep(0.01)
+                status = self.efc_rstat()
+            return
+
     def efc_setgpnvm(self, bno):
+        """
+        EFC Fucntion to set specified GPNVM bit.
+        bno is an integer
+
+        """
         if self.ser.isOpen():
             status = self.efc_rstat()
             while not status:
@@ -112,6 +179,7 @@ class SamBAConnection(object):
         return
 
 def raw_sendf(args, samba):
+    """ Function to burn file onto flash without using XMODEM transfers """
     stat = 1
     pno = args.spno
     binf = open(args.filename, "r")
@@ -130,11 +198,17 @@ def raw_sendf(args, samba):
     if args.g is True:
         logging.info("Setting GPNVM bit to run from flash")
         samba.efc_setgpnvm(1)
+        samba.efc_cleargpnvm(2)
     else:
         logging.warning("Not setting GPNVM bit.\
                          \nInvoke with -g to have that happen.")
 
 def xmodem_sendf(args, samba):
+    """ 
+    Function to burn file onto flash using XMODEM transfers 
+    This does not work on the AT91SAM3U4E, atleast.
+
+    """
     stat = 1
     pno = args.spno
     while stat:
@@ -158,6 +232,13 @@ def xmodem_sendf(args, samba):
                          \nInvoke with -g to have that happen.")
 
 def xm_process_page(args, samba):
+    """
+    Send a single page worth of data from the file to the chip.
+    Returns 1 as long as data remains.
+    Returns 0 when end of file is reached.
+    Uses XMODEM. Does not work on AT91SAM3U4E.
+
+    """
     data = args.filename.read(args.psize)
     if len(data) == args.psize:
         status = 1
@@ -174,6 +255,12 @@ def xm_process_page(args, samba):
     return status
 
 def raw_process_page(args, samba, padr, binf):
+    """
+    Send a single page worth of data from the file to the chip.
+    Returns 1 as long as data remains.
+    Returns 0 when end of file is reached.
+
+    """
     data = binf.read(args.psize)
     if len(data) == args.psize:
         status = 1
@@ -188,7 +275,12 @@ def raw_process_page(args, samba, padr, binf):
         samba.write_word(adrstr, hexlify(data[i:i+4]))
     return status
 
-def verify(args, samba): 
+def verify(args, samba):
+    """
+    Verify the contents of flash against the contents of the file.
+    Returns the total number of words with errors. 
+
+    """
     binf = open(args.filename, "r")
     errors = 0
     address = int(args.saddress, 16) + (args.spno * args.psize)
@@ -203,6 +295,7 @@ def verify(args, samba):
         address = address + 4
         bytes = binf.read(4)
     logging.info ("Verification Complete. Words with Errors : " + str(errors))
+    return errors
 
 def main():
     parser = argparse.ArgumentParser(description="\
