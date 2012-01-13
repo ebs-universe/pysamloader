@@ -305,27 +305,27 @@ def main():
     parser.add_argument('-v', action='store_true',
                         help="Verbose debug information")
     parser.add_argument('-c', action='store_true',
-                        help="Verify Only")
+                        help="Verify Only. Do not write")
     parser.add_argument('filename', metavar='file',
-                        help="File to be send to the chip")
+                        help="Binary file to be burnt into the chip")
     parser.add_argument('--port', metavar='port',
                         default="/dev/ttyUSB0",
-                        help="Port on which SAM-BA is listening")
+                        help="Port on which SAM-BA is listening. Default /dev/ttyUSB0")
     parser.add_argument('--baud', metavar='baut',
                         type=int, default=115200,
-                        help="Baud rate of serial communication")
+                        help="Baud rate of serial communication. Default 115200")
     parser.add_argument('--csize', metavar='csize',
                         type=int, default=128,
-                        help="Size of the chucks used for xmodem transmission")
+                        help="XMODEM transmission packet size. Default 128.")
     parser.add_argument('--psize', metavar='psize',
                         type=int, default=256,
-                        help="Size of a page to be written to at once")
+                        help="Size of ARM flash pages. Default 256 (bytes) ")
     parser.add_argument('--spno', metavar='spno',
                         type=int, default=0,
-                        help="Start flash page number")
+                        help="Start flash page number. Default 0")
     parser.add_argument('--saddress', metavar='saddress',
                         default='00080000',
-                        help="Start address of flash plane")
+                        help="Start address of flash plane. Default 00080000")
     args = parser.parse_args()
     if args.v:
         logging.basicConfig(format='%(levelname)s:%(message)s',
