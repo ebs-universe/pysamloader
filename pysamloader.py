@@ -127,6 +127,14 @@ class SamBAConnection(object):
         self.ser.write(data)
         return len(data)
 
+    def efc_wready(self):
+        """ Wait for EFC to report ready """
+        status = self.efc_rstat()
+        while not status
+            sleep(0.01)
+            status = self.efc_rstat()
+        return
+
     def efc_ewp(self, pno):
         """ EFC trigger write page. Pno is an integer """
         self.write_word('400E0804', '5A'+hex(pno)[2:].zfill(4)+'03')
@@ -149,16 +157,9 @@ class SamBAConnection(object):
 
         """
         if self.ser.isOpen():
-            status = self.efc_rstat()
-            while not status:
-                sleep(0.01)
-                status = self.efc_rstat()
+            self.efc_wready()
             self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+'0C')
-            status = self.efc_rstat()
-            while not status:
-                sleep(0.01)
-                status = self.efc_rstat()
-            return
+            self.efc_wready()
 
     def efc_setgpnvm(self, bno):
         """
@@ -167,15 +168,9 @@ class SamBAConnection(object):
 
         """
         if self.ser.isOpen():
-            status = self.efc_rstat()
-            while not status:
-                sleep(0.01)
-                status = self.efc_rstat()
+            self.efc_wready()
             self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+'0B')
-            status = self.efc_rstat()
-            while not status:
-                sleep(0.01)
-                status = self.efc_rstat()
+            self.efc_wready()
         return
 
 def raw_sendf(args, samba):
@@ -184,11 +179,7 @@ def raw_sendf(args, samba):
     pno = args.spno
     binf = open(args.filename, "r")
     while stat:
-        status = samba.efc_rstat()
-        while not status:
-            sleep(0.01)
-            status = samba.efc_rstat()
-
+        samba.efc_wready()
         padr = int(args.saddress, 16)+(pno*args.psize)
         logging.debug("Start Address of page " + str(pno) + " : " + hex(padr))
         stat = raw_process_page(args, samba, padr, binf)
@@ -212,10 +203,7 @@ def xmodem_sendf(args, samba):
     stat = 1
     pno = args.spno
     while stat:
-        status = samba.efc_rstat()
-        while not status:
-            sleep(0.01)
-            status = samba.efc_rstat()
+        samba.efc_wready()
         adr = int(args.saddress, 16)+pno*args.psize
         adrstr = hex(adr)[2:].zfill(8)
         logging.info("Start Address of page " + str(pno) + " : " + adrstr)
