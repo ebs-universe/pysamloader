@@ -73,6 +73,34 @@ class SamBAConnection(object):
         self.ser.flushInput()
         self.ser.flushOutput()
 
+    def write_byte(self, address, contents):
+        """ 
+        Write 1 byte at a specific address. 
+        Both address and contents expected to be character strings
+        
+        """
+        if self.ser.isOpen():
+            self.flush_all()
+            logging.debug("Writing byte at " +address+ " : " +contents)
+            self.ser.write("O"+address+','+contents+'#')
+            return self.retrieve_response()
+        else:
+            return None
+
+    def write_hword(self, address, contents):
+        """ 
+        Write 2 bytes at a specific address. 
+        Both address and contents expected to be character strings
+        
+        """
+        if self.ser.isOpen():
+            self.flush_all()
+            logging.debug("Writing half word at " +address+ " : " +contents)
+            self.ser.write("H"+address+','+contents+'#')
+            return self.retrieve_response()
+        else:
+            return None
+
     def write_word(self, address, contents):
         """ 
         Write 4 bytes at a specific address. 
@@ -86,6 +114,37 @@ class SamBAConnection(object):
             return self.retrieve_response()
         else:
             return None
+
+    def read_byte(self, address):
+        """ 
+        Read 1 byte from a specific address. 
+        Both address and returned contents are character strings
+        
+        """
+        if self.ser.isOpen():
+            self.flush_all()
+            msg = "o"+address+',#'
+            logging.debug("Reading byte with command : "+msg)
+            self.ser.write(msg)
+            return self.retrieve_response().strip()
+        else:
+            return ''
+
+    def read_hword(self, address):
+        """ 
+        Read 2 bytes from a specific address. 
+        Both address and returned contents are character strings
+        
+        """
+        pass
+        if self.ser.isOpen():
+            self.flush_all()
+            msg = "h"+address+',#'
+            logging.debug("Reading half word with command : "+msg)
+            self.ser.write(msg)
+            return self.retrieve_response().strip()
+        else:
+            return ''
 
     def read_word(self, address):
         """ 
