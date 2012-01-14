@@ -52,7 +52,7 @@ class SamBAConnection(object):
         """ Read a response from SAM-BA, delimited by > """
         char = ''
         data = ''
-        while char and (char is not '>'):
+        while char is not '>':
             data += char
             char = self.ser.read(1)
         return data
@@ -60,9 +60,10 @@ class SamBAConnection(object):
     def make_connection(self):
         """ Test connection to SAM-BA by reading its version """
         self.ser.write("V#")
+        sleep(0.01)
         resp = self.retrieve_response()
+        print "SAM-BA Version : " + resp
         if resp:
-            print resp
             return
         else:
             raise Exception("SAM-BA did not respond to V#")
@@ -130,7 +131,7 @@ class SamBAConnection(object):
     def efc_wready(self):
         """ Wait for EFC to report ready """
         status = self.efc_rstat()
-        while not status
+        while not status:
             sleep(0.01)
             status = self.efc_rstat()
         return
@@ -254,13 +255,14 @@ def raw_process_page(args, samba, padr, binf):
         status = 1
     else:
         if len(data) < args.psize:
-            data += "\255"*(args.psize-len(data))
+            data += "\0xFF"*(args.psize-len(data))
         status = 0
     logging.debug(len(data))
     logging.debug('Sending file chunk : \n' + hexlify(data) + 'CEND\n')
     for i in range(0, 256, 4):
+        wbytes = "".join(byte for byte in reversed(data[i:i+4]))
         adrstr = hex(padr+i)[2:].zfill(8)
-        samba.write_word(adrstr, hexlify(data[i:i+4]))
+        samba.write_word(adrstr, hexlify(wbytes))
     return status
 
 def verify(args, samba):
@@ -272,8 +274,10 @@ def verify(args, samba):
     binf = open(args.filename, "r")
     errors = 0
     address = int(args.saddress, 16) + (args.spno * args.psize)
-    bytes = binf.read(4)
-    while bytes:
+    rbytes = binf.read(4)
+    bytes = "".join(byte for byte in reversed(rbytes))
+
+    while rbytes:
         rval = samba.read_word(hex(address)[2:].zfill(8))
         if not rval.upper()[2:] == hexlify(bytes).upper():
             logging.warning("Verification Failed at "+hex(address) + "-" + rval +' '+ hexlify(bytes))
@@ -281,7 +285,8 @@ def verify(args, samba):
         else:
             logging.debug("Verfied Word at "+ hex(address)+ "-" + rval + ' ' + hexlify(bytes))
         address = address + 4
-        bytes = binf.read(4)
+        rbytes = binf.read(4)
+        bytes = "".join(byte for byte in reversed(rbytes))
     logging.info ("Verification Complete. Words with Errors : " + str(errors))
     return errors
 
