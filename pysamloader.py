@@ -22,6 +22,7 @@ from xmodem import *
 import argparse
 import logging
 import sys
+import devices
 try:
         from cStringIO import StringIO
 except:
@@ -36,7 +37,7 @@ class SamBAConnection(object):
         """ Opens the serial port for the SAM-BA connection """
         self.ser.baudrate = args.baud
         self.ser.port = args.port
-        self.ser.timeout = 5
+        self.ser.timeout = 1
         try:
             self.ser.open()
         except:
@@ -44,7 +45,7 @@ class SamBAConnection(object):
                          \nCheck your connections and try again.")
             sys.exit(1)
         if self.ser.isOpen():
-            self.make_connection()
+            self.make_connection(args)
             self.args = args
             sleep(1)
 
@@ -57,8 +58,24 @@ class SamBAConnection(object):
             char = self.ser.read(1)
         return data
 
-    def make_connection(self):
+    def make_connection(self, args):
         """ Test connection to SAM-BA by reading its version """
+        if args.ab is True:
+            """Auto Baud"""
+            print "Attempting Auto-Baud with SAM-BA"
+            status = 0
+            while not status:
+                self.ser.write('\x80')
+                self.ser.write('\x80')
+                self.ser.write('#')
+                sleep(0.001)
+                resp = self.ser.read(1)
+                if resp is '>':
+                    status = 1
+                    print "SAM-BA Auto-Baud Successful"
+        self.flush_all()
+        self.ser.read(22)
+        sleep(1)
         self.ser.write("V#")
         sleep(0.01)
         resp = self.retrieve_response()
@@ -111,6 +128,7 @@ class SamBAConnection(object):
             self.flush_all()
             logging.debug("Writing at " +address+ " : " +contents)
             self.ser.write("W"+address+','+contents+'#')
+            sleep(0.01)
             return self.retrieve_response()
         else:
             return None
@@ -197,7 +215,7 @@ class SamBAConnection(object):
 
     def efc_ewp(self, pno):
         """ EFC trigger write page. Pno is an integer """
-        self.write_word('400E0804', '5A'+hex(pno)[2:].zfill(4)+'03')
+        self.write_word(self.args.EFC_FCR, '5A'+hex(pno)[2:].zfill(4)+self.args.WPC)
         pass
 
     def efc_rstat(self):
@@ -206,9 +224,9 @@ class SamBAConnection(object):
         Returns True if EFC is ready, False if busy. 
         
         """
-        efstatus = self.read_word('400E0808')
+        efstatus = self.read_word(self.args.EFC_FSR)
         logging.debug("EFC Status : "+ efstatus[8:])
-        return (efstatus[8:] == "01")
+        return (efstatus[9:] == "1")
 
     def efc_cleargpnvm(self, bno):
         """
@@ -218,7 +236,7 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.efc_wready()
-            self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+'0C')
+            self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+self.args.CGPB_CMD)
             self.efc_wready()
 
     def efc_setgpnvm(self, bno):
@@ -229,13 +247,22 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.efc_wready()
-            self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+'0B')
+            self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+self.args.SGPB_CMD)
             self.efc_wready()
         return
+
+    def efc_eraseall(self):
+        """ EFC Function to Erase All """
+        if self.ser.isOpen():
+            self.efc_wready()
+            self.write_word(self.args.EFC_FCR, '5A0000'+self.args.EA_COMMAND)
+            self.efc_wready()
 
 def raw_sendf(args, samba):
     """ Function to burn file onto flash without using XMODEM transfers """
     stat = 1
+    if args.ea is True:
+        samba.efc_eraseall()
     pno = args.spno
     binf = open(args.filename, "r")
     while stat:
@@ -352,6 +379,10 @@ def verify(args, samba):
 def main():
     parser = argparse.ArgumentParser(description="\
             Send a program to an Atmel SAM chip using SAM-BA over UART")
+    parser.add_argument('-m', action='store_true',
+                        help="Manual Configuration. Overrides Device Configs")
+    parser.add_argument('-ea', action='store_true',
+                        help="Erase All instead of page by page. Set by Device")
     parser.add_argument('-g', action='store_true',
                         help="Set GPNVM bit when done writing")
     parser.add_argument('-v', action='store_true',
@@ -363,21 +394,24 @@ def main():
     parser.add_argument('--port', metavar='port',
                         default="/dev/ttyUSB0",
                         help="Port on which SAM-BA is listening. Default /dev/ttyUSB0")
-    parser.add_argument('--baud', metavar='baut',
+    parser.add_argument('--baud', metavar='baud',
                         type=int, default=115200,
                         help="Baud rate of serial communication. Default 115200")
+    parser.add_argument('--device', metavar='device',
+                        default='AT91SAM3U4E',
+                        help="ARM Device. Default AT91SAM3U4E")
     parser.add_argument('--csize', metavar='csize',
                         type=int, default=128,
                         help="XMODEM transmission packet size. Default 128.")
     parser.add_argument('--psize', metavar='psize',
                         type=int, default=256,
-                        help="Size of ARM flash pages. Default 256 (bytes) ")
+                        help="Size of ARM flash pages. Default 256 (bytes). Set by device.")
     parser.add_argument('--spno', metavar='spno',
                         type=int, default=0,
                         help="Start flash page number. Default 0")
     parser.add_argument('--saddress', metavar='saddress',
                         default='00080000',
-                        help="Start address of flash plane. Default 00080000")
+                        help="Start address of flash plane. Default 00080000. Set by device.")
     args = parser.parse_args()
     if args.v:
         logging.basicConfig(format='%(levelname)s:%(message)s',
@@ -385,10 +419,35 @@ def main():
     else:
         logging.basicConfig(format='%(levelname)s:%(message)s',
                             level=logging.INFO)
+    print args.device
+    if not args.m:
+        if args.device == 'AT91SAM7X512':
+            from devices.AT91SAM7X512 import AT91SAM7X512
+            dev = AT91SAM7X512
+
+        if args.device == 'AT91SAM3U4E':
+            from devices.AT91SAM3U4E import AT91SAM3U4E
+            dev = AT91SAM3U4E
+
+        if dev.AutoBaud is True:
+            args.ab = True
+        if dev.FullErase is True:
+            args.ea = True
+            args.WPC = dev.WP_COMMAND
+            args.EA_COMMAND = dev.EA_COMMAND
+        else:
+            args.WPC = dev.EWP_COMMAND
+        args.EFC_FSR = dev.EFC_FSR
+        args.EFC_FCR = dev.EFC_FCR
+        args.SGPB_CMD = dev.SGPB_CMD
+        args.CGPB_CMD = dev.CGPB_CMD
+        args.saddress = dev.FS_ADDRESS
+        args.psize = dev.PAGE_SIZE
+
     samba = SamBAConnection(args)
     if args.c is False:
         raw_sendf(args, samba)
-    samba.make_connection()
+    samba.make_connection(args)
     errors = verify(args, samba)
 
 if __name__ == "__main__":
