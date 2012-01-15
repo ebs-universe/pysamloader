@@ -64,7 +64,7 @@ class SamBAConnection(object):
         """ Test connection to SAM-BA by reading its version """
         if args.ab is True:
             """Auto Baud"""
-            print "Attempting Auto-Baud with SAM-BA"
+            logging.info("Attempting Auto-Baud with SAM-BA")
             status = 0
             while not status:
                 self.ser.write('\x80')
@@ -74,14 +74,15 @@ class SamBAConnection(object):
                 resp = self.ser.read(1)
                 if resp is '>':
                     status = 1
-                    print "SAM-BA Auto-Baud Successful"
+                    logging.info("SAM-BA Auto-Baud Successful")
         self.flush_all()
         self.ser.read(22)
         sleep(1)
         self.ser.write("V#")
         sleep(0.01)
         resp = self.retrieve_response()
-        print "SAM-BA Version : " + resp
+        logging.info("SAM-BA Version : ")
+        logging.info(resp)
         if resp:
             return
         else:
@@ -283,8 +284,8 @@ def raw_sendf(args, samba):
             else:
                 samba.efc_cleargpnvm(i)
     else:
-        logging.warning("Not setting GPNVM bit.\
-                         \nInvoke with -g to have that happen.")
+        logging.warning("Not setting GPNVM bit.")
+        logging.warning("Invoke with -g to have that happen.")
 
 def xmodem_sendf(args, samba):
     """ 
@@ -308,8 +309,8 @@ def xmodem_sendf(args, samba):
         logging.info("Setting GPNVM bit to run from flash")
         samba.efc_setgpnvm(1)
     else:
-        logging.warning("Not setting GPNVM bit.\
-                         \nInvoke with -g to have that happen.")
+        logging.warning("Not setting GPNVM bit.")
+        logging.warning("Invoke with -g to have that happen.")
 
 def xm_process_page(args, samba):
     """
@@ -424,7 +425,7 @@ def main():
     else:
         logging.basicConfig(format='%(levelname)s:%(message)s',
                             level=logging.INFO)
-    print args.device
+        logging.debug("Device : " + args.device)
     if not args.m:
         if args.device == 'AT91SAM7X512':
             from devices.AT91SAM7X512 import AT91SAM7X512
