@@ -25,5 +25,6 @@ class SAMDevice(object):
     EA_COMMAND = None
     FS_ADDRESS = None
     PAGE_SIZE = None
+    SGP = [0, 0, 0]
     def __init__(self, args):
         pass

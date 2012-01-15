@@ -27,5 +27,6 @@ class AT91SAM7X512(object):
     PAGE_SIZE = 256
     SGPB_CMD = '0B'
     CGPB_CMD = '0D'
+    SGP = [0, 0, 1]
     def __init__(self, args):
         pass

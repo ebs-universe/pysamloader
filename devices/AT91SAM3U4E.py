@@ -25,5 +25,6 @@ class AT91SAM7X512(object):
     EA_COMMAND = None
     FS_ADDRESS = '00080000'
     PAGE_SIZE = 256
+    SGP = [0, 1, 0]
     def __init__(self, args):
         pass

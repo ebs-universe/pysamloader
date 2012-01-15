@@ -238,7 +238,7 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.efc_wready()
-            self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+self.args.CGPB_CMD)
+            self.write_word(self.args.EFC_FCR, '5A'+hex(bno)[2:].zfill(4)+self.args.CGPB_CMD)
             self.efc_wready()
 
     def efc_setgpnvm(self, bno):
@@ -249,7 +249,7 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.efc_wready()
-            self.write_word('400E0804', '5A'+hex(bno)[2:].zfill(4)+self.args.SGPB_CMD)
+            self.write_word(self.args.EFC_FCR, '5A'+hex(bno)[2:].zfill(4)+self.args.SGPB_CMD)
             self.efc_wready()
         return
 
@@ -277,8 +277,11 @@ def raw_sendf(args, samba):
         pno = pno + 1
     if args.g is True:
         logging.info("Setting GPNVM bit to run from flash")
-        samba.efc_setgpnvm(1)
-        samba.efc_cleargpnvm(2)
+        for i in range(3):
+            if args.SGP[i] == 1:
+                samba.efc_setgpnvm(i)
+            else:
+                samba.efc_cleargpnvm(i)
     else:
         logging.warning("Not setting GPNVM bit.\
                          \nInvoke with -g to have that happen.")
@@ -427,9 +430,14 @@ def main():
             from devices.AT91SAM7X512 import AT91SAM7X512
             dev = AT91SAM7X512
 
-        if args.device == 'AT91SAM3U4E':
+        elif args.device == 'AT91SAM3U4E':
             from devices.AT91SAM3U4E import AT91SAM3U4E
             dev = AT91SAM3U4E
+
+        else:
+            from devices.samdevice import SAMDevice
+            dev = SAMDevice
+            logging.warning("Device is not supported")
 
         if dev.AutoBaud is True:
             args.ab = True
@@ -445,6 +453,7 @@ def main():
         args.CGPB_CMD = dev.CGPB_CMD
         args.saddress = dev.FS_ADDRESS
         args.psize = dev.PAGE_SIZE
+        args.SGP = dev.SGP
 
     samba = SamBAConnection(args)
     if args.c is False:
