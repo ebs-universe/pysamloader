@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 # Copyright (c) 2012 Chintalagiri Shashank
 #
@@ -23,8 +24,9 @@ import serial
 from xmodem import *
 import argparse
 import logging
-import sys
+import sys, os
 import devices
+from progressbar.progressbar import ProgressBar
 try:
         from cStringIO import StringIO
 except:
@@ -43,7 +45,7 @@ class SamBAConnection(object):
         try:
             self.ser.open()
         except:
-            logging.error("Unable to open serial port.\
+            logging.critical("Unable to open serial port.\
                          \nCheck your connections and try again.")
             sys.exit(1)
         if self.ser.isOpen():
@@ -268,13 +270,16 @@ def raw_sendf(args, samba):
         samba.efc_eraseall()
     pno = args.spno
     binf = open(args.filename, "r")
+    npages = int((os.fstat(binf.fileno())[6]+128)/256)
+    p = ProgressBar('red', block='▣', empty='□')
     while stat:
+        p.render(pno*100/npages, "Page %s of %s\nWriting to Flash" % (pno, npages))
         samba.efc_wready()
         padr = int(args.saddress, 16)+(pno*args.psize)
         logging.debug("Start Address of page " + str(pno) + " : " + hex(padr))
         stat = raw_process_page(args, samba, padr, binf)
         samba.efc_ewp(pno)
-        logging.info("Page done - "+str(pno))
+        logging.debug("Page done - "+str(pno))
         pno = pno + 1
     if args.g is True:
         logging.info("Setting GPNVM bit to run from flash")
@@ -364,21 +369,28 @@ def verify(args, samba):
 
     """
     binf = open(args.filename, "r")
+    nbytes = os.fstat(binf.fileno())[6]
+    p = ProgressBar('green', block='▣', empty='□')
     errors = 0
     address = int(args.saddress, 16) + (args.spno * args.psize)
     rbytes = binf.read(4)
     bytes = "".join(byte for byte in reversed(rbytes))
-
+    progbyte = 0
     while rbytes:
         rval = samba.read_word(hex(address)[2:].zfill(8))
         if not rval.upper()[2:] == hexlify(bytes).upper():
-            logging.warning("Verification Failed at "+hex(address) + "-" + rval +' '+ hexlify(bytes))
+            logging.error("Verification Failed at " +
+                           hex(address) + "-" + rval +' '+ hexlify(bytes))
             errors = errors + 1
         else:
-            logging.debug("Verfied Word at "+ hex(address)+ "-" + rval + ' ' + hexlify(bytes))
+            logging.debug("Verfied Word at " +
+                          hex(address)+ "-" + rval + ' ' + hexlify(bytes))
         address = address + 4
         rbytes = binf.read(4)
         bytes = "".join(byte for byte in reversed(rbytes))
+        progbyte = progbyte + 4
+        p.render(progbyte*100/nbytes,
+                "%s of %s Bytes\nVerifying Flash" % (progbyte, nbytes))
     logging.info ("Verification Complete. Words with Errors : " + str(errors))
     return errors
 
