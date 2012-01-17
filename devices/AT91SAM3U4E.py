@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pysamloader.  If not, see <http://www.gnu.org/licenses/>.
 
-class AT91SAM7X512(object):
+class AT91SAM3U4E(object):
     EFC_FCR = '400E0804'
     EFC_FSR = '400E0808'
     AutoBaud = False
@@ -26,5 +26,7 @@ class AT91SAM7X512(object):
     FS_ADDRESS = '00080000'
     PAGE_SIZE = 256
     SGP = [0, 1, 0]
+    SGPB_CMD = '0B'
+    CGPB_CMD = '0C'
     def __init__(self, args):
         pass
