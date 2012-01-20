@@ -133,7 +133,7 @@ class SamBAConnection(object):
             self.flush_all()
             logging.debug("Writing at " +address+ " : " +contents)
             self.ser.write("W"+address+','+contents+'#')
-            sleep(0.01)
+            #sleep(0.01)
             return self.retrieve_response()
         else:
             return None
@@ -281,6 +281,7 @@ def raw_sendf(args, samba):
         samba.efc_ewp(pno)
         logging.debug("Page done - "+str(pno))
         pno = pno + 1
+    p.render(100, "Page %s of %s\nWriting to Flash complete" % (npages, npages))
     if args.g is True:
         logging.info("Setting GPNVM bit to run from flash")
         for i in range(3):
