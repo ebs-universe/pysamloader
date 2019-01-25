@@ -1,4 +1,4 @@
-#!/usr/bin/python
+
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2012 Chintalagiri Shashank
@@ -103,7 +103,7 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.flush_all()
-            logging.debug("Writing byte at " +address+ " : " +contents)
+            logging.debug("Writing byte at " + address + " : " + contents)
             self.ser.write("O"+address+','+contents+'#')
             return self.retrieve_response()
         else:
@@ -117,7 +117,7 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.flush_all()
-            logging.debug("Writing half word at " +address+ " : " +contents)
+            logging.debug("Writing half word at " + address + " : " + contents)
             self.ser.write("H"+address+','+contents+'#')
             return self.retrieve_response()
         else:
@@ -131,9 +131,9 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.flush_all()
-            logging.debug("Writing at " +address+ " : " +contents)
-            self.ser.write("W"+address+','+contents+'#')
-            #sleep(0.01)
+            logging.debug("Writing at " + address + " : " + contents)
+            self.ser.write("W"+address+',' + contents + '#')
+            # sleep(0.01)
             return self.retrieve_response()
         else:
             return None
@@ -188,8 +188,8 @@ class SamBAConnection(object):
         """ Initialize XMODEM file send to specified address """
         if self.ser.isOpen():
             self.flush_all()
-            msg = "S"+address+',#'
-            logging.debug("Starting send file with command : "+ msg)
+            msg = "S" + address + ',#'
+            logging.debug("Starting send file with command : " + msg)
             self.ser.write(msg)
             char = ''
             while char is not 'C':
@@ -201,11 +201,11 @@ class SamBAConnection(object):
         """ Initialize XMODEM file read from specified address """
         pass
 
-    def xm_getc(self, size, timeout=1):
+    def xm_getc(self, size):
         """ getc function for the xmodem protocol """
         return self.ser.read(size)
 
-    def xm_putc(self, data, timeout=1):
+    def xm_putc(self, data):
         """ putc function for the xmodem protocol """
         self.ser.write(data)
         return len(data)
@@ -230,8 +230,8 @@ class SamBAConnection(object):
         
         """
         efstatus = self.read_word(self.args.EFC_FSR)
-        logging.debug("EFC Status : "+ efstatus[8:])
-        return (efstatus[9:] == "1")
+        logging.debug("EFC Status : " + efstatus[8:])
+        return efstatus[9:] == "1"
 
     def efc_cleargpnvm(self, bno):
         """
@@ -263,6 +263,7 @@ class SamBAConnection(object):
             self.write_word(self.args.EFC_FCR, '5A0000'+self.args.EA_COMMAND)
             self.efc_wready()
 
+
 def raw_sendf(args, samba):
     """ Function to burn file onto flash without using XMODEM transfers """
     stat = 1
@@ -293,6 +294,7 @@ def raw_sendf(args, samba):
         logging.warning("Not setting GPNVM bit.")
         logging.warning("Invoke with -g to have that happen.")
 
+
 def xmodem_sendf(args, samba):
     """ 
     Function to burn file onto flash using XMODEM transfers 
@@ -318,6 +320,7 @@ def xmodem_sendf(args, samba):
         logging.warning("Not setting GPNVM bit.")
         logging.warning("Invoke with -g to have that happen.")
 
+
 def xm_process_page(args, samba):
     """
     Send a single page worth of data from the file to the chip.
@@ -334,12 +337,13 @@ def xm_process_page(args, samba):
             data += "\255"*(args.psize-len(data))
         status = 0
     logging.debug(len(data))
-    logging.debug('Sending file chunk : \n'+ hexlify(data)+ ' CEND\n')
+    logging.debug('Sending file chunk : \n' + hexlify(data) + ' CEND\n')
     sendbuf = StringIO(data)
     modem = XMODEM(samba.xm_getc, samba.xm_putc)
-    modem.send(sendbuf, quiet=1)
+    modem.send(sendbuf, quiet=True)
     sendbuf.close()
     return status
+
 
 def raw_process_page(args, samba, padr, binf):
     """
@@ -363,6 +367,7 @@ def raw_process_page(args, samba, padr, binf):
         samba.write_word(adrstr, hexlify(wbytes))
     return status
 
+
 def verify(args, samba):
     """
     Verify the contents of flash against the contents of the file.
@@ -381,19 +386,20 @@ def verify(args, samba):
         rval = samba.read_word(hex(address)[2:].zfill(8))
         if not rval.upper()[2:] == hexlify(bytes).upper():
             logging.error("Verification Failed at " +
-                           hex(address) + "-" + rval +' '+ hexlify(bytes))
+                          hex(address) + "-" + rval + ' ' + hexlify(bytes))
             errors = errors + 1
         else:
             logging.debug("Verfied Word at " +
-                          hex(address)+ "-" + rval + ' ' + hexlify(bytes))
+                          hex(address) + "-" + rval + ' ' + hexlify(bytes))
         address = address + 4
         rbytes = binf.read(4)
         bytes = "".join(byte for byte in reversed(rbytes))
         progbyte = progbyte + 4
         p.render(progbyte*100/nbytes,
-                "%s of %s Bytes\nVerifying Flash" % (progbyte, nbytes))
+                 "%s of %s Bytes\nVerifying Flash" % (progbyte, nbytes))
     logging.info ("Verification Complete. Words with Errors : " + str(errors))
     return errors
+
 
 def main():
     parser = argparse.ArgumentParser(description="\
@@ -455,6 +461,8 @@ def main():
 
         if dev.AutoBaud is True:
             args.ab = True
+        else:
+            args.ab = False
         if dev.FullErase is True:
             args.ea = True
             args.WPC = dev.WP_COMMAND
@@ -474,6 +482,7 @@ def main():
         raw_sendf(args, samba)
     samba.make_connection(args)
     errors = verify(args, samba)
+
 
 if __name__ == "__main__":
     main()
