@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Chintalagiri Shashank
+# Copyright (c) 2012-2019 Chintalagiri Shashank
 #
 # This file is part of pysamloader.
 
@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with pysamloader.  If not, see <http://www.gnu.org/licenses/>.
 
-class AT91SAM3U4E(object):
+
+from .samdevice import SAMDevice
+
+
+class AT91SAM3U4E(SAMDevice):
     EFC_FCR = '400E0804'
     EFC_FSR = '400E0808'
     AutoBaud = False
@@ -25,8 +29,9 @@ class AT91SAM3U4E(object):
     EA_COMMAND = None
     FS_ADDRESS = '00080000'
     PAGE_SIZE = 256
-    SGP = [0, 1, 0]
     SGPB_CMD = '0B'
     CGPB_CMD = '0C'
-    def __init__(self, args):
-        pass
+    SGP = [0, 1, 0]
+
+    def __init__(self):
+        super(AT91SAM3U4E, self).__init__()

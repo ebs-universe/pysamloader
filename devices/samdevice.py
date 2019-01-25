@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Chintalagiri Shashank
+# Copyright (c) 2012-2019 Chintalagiri Shashank
 #
 # This file is part of pysamloader.
 
@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pysamloader.  If not, see <http://www.gnu.org/licenses/>.
 
+
 class SAMDevice(object):
     EFC_FCR = None
     EFC_FSR = None
@@ -26,5 +27,17 @@ class SAMDevice(object):
     FS_ADDRESS = None
     PAGE_SIZE = None
     SGP = [0, 0, 0]
-    def __init__(self, args):
+
+    def __init__(self):
         pass
+
+    @property
+    def WPC(self):
+        return self.WP_COMMAND or self.EWP_COMMAND
+
+    @property
+    def EAC(self):
+        if self.EA_COMMAND:
+            return self.EA_COMMAND
+        else:
+            raise NotImplementedError
