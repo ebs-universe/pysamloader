@@ -1,0 +1,3 @@
+[console_scripts]
+pysamloader = pysamloader.pysamloader:main
+
