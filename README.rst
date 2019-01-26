@@ -1,17 +1,84 @@
+
 pysamloader
 ===========
 
-``pysamloader`` is a primitive python script for writing flash on Atmel's
-ARM chips via SAM-BA.
+``pysamloader`` is a python script for writing flash on Atmel's ARM chips
+via SAM-BA. Originally written years ago when Atmel's standard tools
+were unavailable or unusable on Linux, the scripts have been adapted to
+serve narrower but specific use cases.
 
-.. warning::
-    Highly unpolished - use with extreme caution.
+Specifically, ``pysamloader`` is intended to be :
+    - Simple, particularly for an end-user
+    - Easily installable across platforms
+    - Usable from within larger python applications or scripts
 
+Currently, ``pysamloader`` might not satisfy any of those criterion. It
+seems to be reasonably stable on a tiny set of supported devices with
+some additional limitations, but that's about it.
+
+If you happen to use ``pysamloader``, or wish to use it, let me know along
+with any feedback you might have to ensure the tool is stable, reliable, and
+sufficiently versatile. Device support is easy enough to add, and I will do
+so as the need (and more importantly, the ability to test on other devices)
+presents itself. Pull requests are also welcome.
+
+Requirements & Installation
+---------------------------
+
+``pysamloader`` should work on any platform which supports ``python``.
+It is best tested on Linux followed by Windows (10 and 7).
+
+``pysamloader`` currently supports both Python 2 and Python 3. However,
+Python 2 support is likely to be removed in the near future.
+
+Currently, ``pysamloader`` is expected to be pip-installed. It can be
+safely installed into a ``virtualenv``. There are no distro-specific
+packages or windows installers available.
+
+Installing ``pysamloader`` for most users would be simply :
+
+.. code-block:: console
+
+    $ pip install pysamloader
+
+If you wish to develop, modify the sources, or otherwise get the latest
+version, it can be installed from a clone of the git repository (or
+clone thereof) as follows :
+
+.. code-block:: console
+
+    $ git clone https://github.com/chintal/pysamloader.git
+    $ cd pysamloader
+    $ pip install -e .
+
+Usage
+-----
+
+The primary entry point for use of ``pysamloader`` is as a console script.
+
+For those in a hurry, the following is a quick example of how to use the
+script to burn ``app.bin`` to an ``ATSAM3U4E`` whose UART SAM-BA interface
+is accessible on ``\dev\ttyUSB1``:
+
+.. code-block:: console
+    $ pysamloader --device ATSAM3U4E --port \dev\ttyUSB1 -g app.bin
+
+
+Script usage and arguments are listed here. This help listing can also be
+obtained on the command line with ``pysamloader --help``.
+
+.. argparse::
+    :module: pysamloader.pysamloader
+    :func: _get_parser
+    :prog: pysamloader
+    :nodefault:
 
 Known Issues
 ------------
 
-
+ - Writing to multiple flash planes is not currently supported. This
+   application will always write to the first flash plane and will start at
+   the beginning.
 
 Links
 -----

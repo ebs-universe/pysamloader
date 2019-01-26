@@ -101,7 +101,7 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.flush_all()
             logger.debug("Writing byte at {0} : {1}"
-                          "".format(address, contents))
+                         "".format(address, contents))
             self.ser.write("O{0},{1}#".format(address, contents))
             return self.retrieve_response()
         else:

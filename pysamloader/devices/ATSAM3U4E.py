@@ -19,7 +19,7 @@
 from ..samdevice import SAMDevice
 
 
-class AT91SAM3U4E(SAMDevice):
+class ATSAM3U4E(SAMDevice):
     EFC_FCR = '400E0804'
     EFC_FSR = '400E0808'
     AutoBaud = False
@@ -34,4 +34,4 @@ class AT91SAM3U4E(SAMDevice):
     SGP = [0, 1, 0]
 
     def __init__(self):
-        super(AT91SAM3U4E, self).__init__()
+        super(ATSAM3U4E, self).__init__()

@@ -209,7 +209,7 @@ def _get_parser():
                         help="Baud rate of serial communication. "
                              "Default 115200")
     parser.add_argument('-d', '--device', metavar='device',
-                        help="ARM Device. Default AT91SAM3U4E")
+                        help="ARM Device. Default ATSAM3U4E")
     parser.add_argument('--lp', '--list-ports', action='store_true',
                         help="List available serial ports")
     parser.add_argument('--ld', '--list-devices', action='store_true',
@@ -240,8 +240,8 @@ def main():
         return
 
     if not arguments.device:
-        logger.info("Device not specified. Assuming AT91SAM3U4E.")
-        arguments.device = 'AT91SAM3U4E'
+        logger.info("Device not specified. Assuming ATSAM3U4E.")
+        arguments.device = 'ATSAM3U4E'
 
     try:
         dev_mod = importlib.import_module(
