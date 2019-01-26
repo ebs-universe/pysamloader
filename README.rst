@@ -62,6 +62,7 @@ script to burn ``app.bin`` to an ``ATSAM3U4E`` whose UART SAM-BA interface
 is accessible on ``\dev\ttyUSB1``:
 
 .. code-block:: console
+
     $ pysamloader --device ATSAM3U4E --port \dev\ttyUSB1 -g app.bin
 
 
