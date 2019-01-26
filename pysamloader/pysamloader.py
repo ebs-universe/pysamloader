@@ -28,8 +28,11 @@ from binascii import hexlify
 from six import StringIO
 from serial.tools import list_ports
 
-from terminal import ProgressBar
-from samba import SamBAConnection
+from .terminal import ProgressBar
+from .samba import SamBAConnection
+
+logging.basicConfig(format='[%(levelname)8s][%(name)s] %(message)s')
+logger = logging.getLogger('pysamloader')
 
 
 def raw_write_page(samba, page_address, data):
@@ -61,13 +64,14 @@ def _page_writer(_writer, samba, device, page_address, bin_file):
         if len(data) < device.PAGE_SIZE:
             data += "\255" * (device.PAGE_SIZE - len(data))
         status = 0
-    logging.debug(len(data))
-    logging.debug('Sending file chunk : \n {0}CEND'.format(hexlify(data)))
+    logger.debug(len(data))
+    logger.debug('Sending file chunk : \n {0}CEND'.format(hexlify(data)))
     _writer(samba, page_address, data)
     return status
 
 
-def _file_writer(_writer, samba, device, filename, start_page=0, set_boot=True):
+def _file_writer(_writer, samba, device, filename,
+                 start_page=0, set_boot=True):
     stat = 1
     if device.FullErase:
         samba.efc_eraseall()
@@ -76,29 +80,29 @@ def _file_writer(_writer, samba, device, filename, start_page=0, set_boot=True):
     num_pages = int((os.fstat(bin_file.fileno())[6] + 128) / 256)
     p = ProgressBar(max=num_pages)
 
-    logging.info("Writing to Flash")
+    logger.info("Writing to Flash")
     while stat:
         samba.efc_wready()
         page_address = int(device.FS_ADDRESS, 16) + (page_no * device.PAGE_SIZE)
         adrstr = hex(page_address)[2:].zfill(8)
-        logging.debug("Start Address of page {0} : {1}".format(page_no, adrstr))
+        logger.debug("Start Address of page {0} : {1}".format(page_no, adrstr))
         stat = _writer(samba, device, page_address, bin_file)
         samba.efc_ewp(page_no)
-        logging.debug("Page done : {0}".format(page_no))
+        logger.debug("Page done : {0}".format(page_no))
         page_no = page_no + 1
         p.next(note="Page {0}/{1}".format(page_no, num_pages))
-    logging.info("Writing to Flash Complete")
+    logger.info("Writing to Flash Complete")
 
     if set_boot:
-        logging.info("Setting GPNVM bit to boot from flash")
+        logger.info("Setting GPNVM bit to boot from flash")
         for i in range(3):
             if device.SGP[i] == 1:
                 samba.efc_setgpnvm(i)
             else:
                 samba.efc_cleargpnvm(i)
     else:
-        logging.warning("Not setting GPNVM bit.")
-        logging.warning("Invoke with -g to have that happen.")
+        logger.warning("Not setting GPNVM bit.")
+        logger.warning("Invoke with -g to have that happen.")
 
 
 def xmodem_sendf(*args, **kwargs):
@@ -123,24 +127,24 @@ def verify(samba, device, filename, start_page=0):
     errors = 0
     byte_address = 0
     p = ProgressBar(max=len_bytes)
-    logging.info("Verifying Flash")
+    logger.info("Verifying Flash")
     reversed_word = bin_file.read(4)
     word = "".join(byte for byte in reversed(reversed_word))
     while reversed_word:
         p.next(note="{0} of {1} Bytes".format(byte_address, len_bytes))
         result = samba.read_word(hex(address)[2:].zfill(8))
         if not result.upper()[2:] == hexlify(word).upper():
-            logging.error("Verification Failed at {0} - {1} {2}"
-                          "".format(hex(address), result, hexlify(word)))
+            logger.error("Verification Failed at {0} - {1} {2}"
+                         "".format(hex(address), result, hexlify(word)))
             errors = errors + 1
         else:
-            logging.debug("Verified Word at {0} - {1} {2}"
-                          "".format(hex(address), result, hexlify(word)))
+            logger.debug("Verified Word at {0} - {1} {2}"
+                         "".format(hex(address), result, hexlify(word)))
         address = address + 4
         reversed_word = bin_file.read(4)
         word = "".join(byte for byte in reversed(reversed_word))
         byte_address = byte_address + 4
-    logging.info("Verification Complete. Words with Errors : " + str(errors))
+    logger.info("Verification Complete. Words with Errors : " + str(errors))
     return errors
 
 
@@ -180,28 +184,30 @@ def print_supported_devices():
 def print_serial_ports():
     print("Detected serial ports : ")
     for p in list_ports.comports():
-        print(" - {0:15} {1:>20} {2:18} {3:18}"
-              "".format(p.device, p.manufacturer, p.product, p.serial_number))
+        print(" - {0:15} {1:20} {2:18} {3:18}"
+              "".format(str(p.device), str(p.manufacturer),
+                        str(p.product), str(p.serial_number)))
 
 
 def _get_parser():
-    parser = argparse.ArgumentParser(description="\
-                        Send a program to an Atmel SAM chip using SAM-BA over UART")
+    parser = argparse.ArgumentParser(
+        description="Write an Atmel SAM chip's Flash using SAM-BA over UART")
     parser.add_argument('-g', action='store_true',
-                        help="Set GPNVM bit when done writing. Needed to switch "
-                             "device boot from SAM-BA ROM to Flash program")
+                        help="Set GPNVM bit when done writing. Needed to "
+                             "switch device boot from SAM-BA ROM to Flash "
+                             "program")
     parser.add_argument('-v', action='store_true',
                         help="Verbose debug information")
     parser.add_argument('-c', action='store_true',
                         help="Verify Only. Do not write")
     parser.add_argument('filename', metavar='file', nargs='?',
                         help="Binary file to be burnt into the chip")
-    parser.add_argument('--port', metavar='port',
-                        default="/dev/ttyUSB1",
-                        help="Port on which SAM-BA is listening. Default /dev/ttyUSB1")
-    parser.add_argument('--baud', metavar='baud',
-                        type=int, default=115200,
-                        help="Baud rate of serial communication. Default 115200")
+    parser.add_argument('--port', metavar='port', default="/dev/ttyUSB1",
+                        help="Port on which SAM-BA is listening. "
+                             "Default /dev/ttyUSB1")
+    parser.add_argument('--baud', metavar='baud', type=int, default=115200,
+                        help="Baud rate of serial communication. "
+                             "Default 115200")
     parser.add_argument('-d', '--device', metavar='device',
                         help="ARM Device. Default AT91SAM3U4E")
     parser.add_argument('--lp', '--list-ports', action='store_true',
@@ -216,11 +222,12 @@ def main():
     arguments = parser.parse_args()
 
     if arguments.v:
-        logging.basicConfig(format='%(levelname)s:%(message)s',
-                            level=logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+        logging.getLogger('samba').setLevel(logging.DEBUG)
     else:
-        logging.basicConfig(format='%(levelname)s:%(message)s',
-                            level=logging.INFO)
+        logger.setLevel(logging.INFO)
+        logging.getLogger('samba').setLevel(logging.INFO)
+
     if arguments.lp:
         return print_serial_ports()
 
@@ -233,17 +240,17 @@ def main():
         return
 
     if not arguments.device:
-        logging.info("Device not specified. Assuming AT91SAM3U4E.")
+        logger.info("Device not specified. Assuming AT91SAM3U4E.")
         arguments.device = 'AT91SAM3U4E'
 
     try:
-        dev_mod = importlib.import_module('.devices.{0}'.format(arguments.device),
-                                          'pysamloader')
+        dev_mod = importlib.import_module(
+            '.devices.{0}'.format(arguments.device), 'pysamloader')
         dev = getattr(dev_mod, arguments.device)()
     except ImportError:
         from .samdevice import SAMDevice
         dev = SAMDevice()
-        logging.warning("Device is not supported!")
+        logger.warning("Device is not supported!")
         print_supported_devices()
 
     arguments.device = dev

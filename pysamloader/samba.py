@@ -20,9 +20,11 @@
 import logging
 import sys
 from time import sleep
-
 from serial import Serial
-from samdevice import SAMDevice
+
+from .samdevice import SAMDevice
+
+logger = logging.getLogger('samba')
 
 
 class SamBAConnection(object):
@@ -37,8 +39,8 @@ class SamBAConnection(object):
         try:
             self.ser.open()
         except:
-            logging.critical("Unable to open serial port.\
-                         \nCheck your connections and try again.")
+            logger.critical("Unable to open serial port.\
+                            \nCheck your connections and try again.")
             sys.exit(1)
         if not device:
             self._device = SAMDevice()
@@ -61,7 +63,7 @@ class SamBAConnection(object):
         """ Test connection to SAM-BA by reading its version """
         if auto_baud is True:
             """Auto Baud"""
-            logging.info("Attempting Auto-Baud with SAM-BA")
+            logger.info("Attempting Auto-Baud with SAM-BA")
             status = 0
             while not status:
                 self.ser.write('\x80')
@@ -71,15 +73,15 @@ class SamBAConnection(object):
                 resp = self.ser.read(1)
                 if resp is '>':
                     status = 1
-                    logging.info("SAM-BA Auto-Baud Successful")
+                    logger.info("SAM-BA Auto-Baud Successful")
         self.flush_all()
         self.ser.read(22)
         sleep(1)
         self.ser.write("V#")
         sleep(0.01)
         resp = self.retrieve_response()
-        logging.info("SAM-BA Version : ")
-        logging.info(resp)
+        logger.info("SAM-BA Version : ")
+        logger.info(resp)
         if resp:
             return
         else:
@@ -98,7 +100,7 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.flush_all()
-            logging.debug("Writing byte at {0} : {1}"
+            logger.debug("Writing byte at {0} : {1}"
                           "".format(address, contents))
             self.ser.write("O{0},{1}#".format(address, contents))
             return self.retrieve_response()
@@ -113,8 +115,8 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.flush_all()
-            logging.debug("Writing half word at {0} : {1}"
-                          "".format(address, contents))
+            logger.debug("Writing half word at {0} : {1}"
+                         "".format(address, contents))
             self.ser.write("H{0},{1}#".format(address, contents))
             return self.retrieve_response()
         else:
@@ -128,8 +130,8 @@ class SamBAConnection(object):
         """
         if self.ser.isOpen():
             self.flush_all()
-            logging.debug("Writing word at {0} : {1}"
-                          "".format(address, contents))
+            logger.debug("Writing word at {0} : {1}"
+                         "".format(address, contents))
             self.ser.write("W{0},{1}#".format(address, contents))
             return self.retrieve_response()
         else:
@@ -144,7 +146,7 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.flush_all()
             msg = "o{0},#".format(address)
-            logging.debug("Reading byte with command : {0}".format(msg))
+            logger.debug("Reading byte with command : {0}".format(msg))
             self.ser.write(msg)
             return self.retrieve_response().strip()
         else:
@@ -160,7 +162,7 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.flush_all()
             msg = "h{0},#".format(address)
-            logging.debug("Reading half word with command : {0}".format(msg))
+            logger.debug("Reading half word with command : {0}".format(msg))
             self.ser.write(msg)
             return self.retrieve_response().strip()
         else:
@@ -175,7 +177,7 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.flush_all()
             msg = "w{0},#".format(address)
-            logging.debug("Reading word with command : {0}".format(msg))
+            logger.debug("Reading word with command : {0}".format(msg))
             self.ser.write(msg)
             return self.retrieve_response().strip()
         else:
@@ -186,11 +188,11 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.flush_all()
             msg = "S{0},#".format(address)
-            logging.debug("Starting send file with command : {0}".format(msg))
+            logger.debug("Starting send file with command : {0}".format(msg))
             self.ser.write(msg)
             char = ''
             while char is not 'C':
-                logging.info("Waiting for CRC")
+                logger.info("Waiting for CRC")
                 char = self.ser.read(1)
             return
 
@@ -218,7 +220,10 @@ class SamBAConnection(object):
     def efc_ewp(self, pno):
         """ EFC trigger write page. Pno is an integer """
         self.write_word(self._device.EFC_FCR,
-                        '5A{0}{1}'.format(hex(pno)[2:].zfill(4), self._device.WPC))
+                        '5A{0}{1}'.format(
+                            hex(pno)[2:].zfill(4),
+                            self._device.WPC
+                        ))
 
     def efc_rstat(self):
         """
@@ -227,7 +232,7 @@ class SamBAConnection(object):
 
         """
         efc_status = self.read_word(self._device.EFC_FSR)
-        logging.debug("EFC Status : {0}".format(efc_status[8:]))
+        logger.debug("EFC Status : {0}".format(efc_status[8:]))
         return efc_status[9:] == "1"
 
     def efc_cleargpnvm(self, bno):
@@ -239,7 +244,10 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.efc_wready()
             self.write_word(self._device.EFC_FCR,
-                            '5A{0}{1}'.format(hex(bno)[2:].zfill(4), self._device.CGPB_CMD))
+                            '5A{0}{1}'.format(
+                                hex(bno)[2:].zfill(4),
+                                self._device.CGPB_CMD
+                            ))
             self.efc_wready()
 
     def efc_setgpnvm(self, bno):
@@ -251,7 +259,10 @@ class SamBAConnection(object):
         if self.ser.isOpen():
             self.efc_wready()
             self.write_word(self._device.EFC_FCR,
-                            '5A{0}{1}'.format(hex(bno)[2:].zfill(4), self._device.SGPB_CMD))
+                            '5A{0}{1}'.format(
+                                hex(bno)[2:].zfill(4),
+                                self._device.SGPB_CMD
+                            ))
             self.efc_wready()
         return
 
