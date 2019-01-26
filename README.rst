@@ -3,18 +3,19 @@ pysamloader
 ===========
 
 ``pysamloader`` is a python script for writing flash on Atmel's ARM chips
-via SAM-BA. Originally written years ago when Atmel's standard tools
-were unavailable or unusable on Linux, the scripts have been adapted to
-serve narrower but specific use cases.
+via SAM-BA. Originally written years ago when Atmel's standard tools were
+unavailable or unusable on Linux, the scripts have been adapted to serve
+narrower but specific use cases.
 
 Specifically, ``pysamloader`` is intended to be :
+
     - Simple, particularly for an end-user
     - Easily installable across platforms
     - Usable from within larger python applications or scripts
 
-Currently, ``pysamloader`` might not satisfy any of those criterion. It
-seems to be reasonably stable on a tiny set of supported devices with
-some additional limitations, but that's about it.
+Currently, ``pysamloader`` might not satisfy any of those criteria. It seems
+to be reasonably stable on a tiny set of supported devices with some
+additional limitations, but that's about it.
 
 If you happen to use ``pysamloader``, or wish to use it, let me know along
 with any feedback you might have to ensure the tool is stable, reliable, and
@@ -94,3 +95,5 @@ to report bugs, request features, or submit pull/merge requests.
 ``pysamloader`` is distributed under the terms of the
 `GPLv3 license <https://www.gnu.org/licenses/gpl-3.0-standalone.html>`_ .
 A copy of the text of the license is included along with the sources.
+
+I can be reached directly by email at shashank at chintal dot in.
