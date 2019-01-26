@@ -22,7 +22,7 @@ import sys
 from time import sleep
 
 from serial import Serial
-from devices.samdevice import SAMDevice
+from samdevice import SAMDevice
 
 
 class SamBAConnection(object):

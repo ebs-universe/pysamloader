@@ -36,12 +36,15 @@ setup(
     install_requires=[
         'six',
         'wheel',
+        'xmodem',
+        'pyserial',
+        'progress',
     ],
     extras_require={
         'docs': ['sphinx', 'sphinx-argparse'],
     },
     platforms='any',
     entry_points={
-        'console_scripts': ['pysamloader=pysamloader:main'],
+        'console_scripts': ['pysamloader=pysamloader.pysamloader:main'],
     }
 )

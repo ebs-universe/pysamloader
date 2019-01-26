@@ -25,9 +25,10 @@ import importlib
 
 from xmodem import XMODEM
 from binascii import hexlify
+from six import StringIO
+from serial.tools import list_ports
 
 from terminal import ProgressBar
-from six import StringIO
 from samba import SamBAConnection
 
 
@@ -151,6 +152,38 @@ def write_and_verify(args):
     verify(samba, args.device, args.filename)
 
 
+def get_supported_devices():
+    devices_folder = os.path.join(os.path.split(__file__)[0], 'devices')
+    candidates = [f for f in os.listdir(devices_folder)
+                  if os.path.isfile(os.path.join(devices_folder, f))
+                  and not f.startswith('_')]
+    supported_devices = []
+    for candidate in candidates:
+        name, ext = os.path.splitext(candidate)
+        if ext == '.py':
+            try:
+                dev_mod = importlib.import_module('.devices.{0}'.format(name),
+                                                  'pysamloader')
+                getattr(dev_mod, name)()
+                supported_devices.append(name)
+            except ImportError:
+                continue
+    return supported_devices
+
+
+def print_supported_devices():
+    print("Supported devices : ")
+    for d in get_supported_devices():
+        print(" - {0}".format(d))
+
+
+def print_serial_ports():
+    print("Detected serial ports : ")
+    for p in list_ports.comports():
+        print(" - {0:15} {1:>20} {2:18} {3:18}"
+              "".format(p.device, p.manufacturer, p.product, p.serial_number))
+
+
 def _get_parser():
     parser = argparse.ArgumentParser(description="\
                         Send a program to an Atmel SAM chip using SAM-BA over UART")
@@ -161,7 +194,7 @@ def _get_parser():
                         help="Verbose debug information")
     parser.add_argument('-c', action='store_true',
                         help="Verify Only. Do not write")
-    parser.add_argument('filename', metavar='file',
+    parser.add_argument('filename', metavar='file', nargs='?',
                         help="Binary file to be burnt into the chip")
     parser.add_argument('--port', metavar='port',
                         default="/dev/ttyUSB1",
@@ -169,8 +202,12 @@ def _get_parser():
     parser.add_argument('--baud', metavar='baud',
                         type=int, default=115200,
                         help="Baud rate of serial communication. Default 115200")
-    parser.add_argument('--device', metavar='device',
+    parser.add_argument('-d', '--device', metavar='device',
                         help="ARM Device. Default AT91SAM3U4E")
+    parser.add_argument('--lp', '--list-ports', action='store_true',
+                        help="List available serial ports")
+    parser.add_argument('--ld', '--list-devices', action='store_true',
+                        help="List supported devices")
     return parser
 
 
@@ -184,18 +221,30 @@ def main():
     else:
         logging.basicConfig(format='%(levelname)s:%(message)s',
                             level=logging.INFO)
+    if arguments.lp:
+        return print_serial_ports()
+
+    if arguments.ld:
+        return print_supported_devices()
+
+    if not arguments.filename:
+        print("No bin file provided and no list actions requested.")
+        parser.print_help()
+        return
 
     if not arguments.device:
         logging.info("Device not specified. Assuming AT91SAM3U4E.")
         arguments.device = 'AT91SAM3U4E'
 
     try:
-        dev_mod = importlib.import_module('devices.{0}'.format(arguments.device))
+        dev_mod = importlib.import_module('.devices.{0}'.format(arguments.device),
+                                          'pysamloader')
         dev = getattr(dev_mod, arguments.device)()
     except ImportError:
-        from devices.samdevice import SAMDevice
+        from .samdevice import SAMDevice
         dev = SAMDevice()
-        logging.warning("Device is not supported")
+        logging.warning("Device is not supported!")
+        print_supported_devices()
 
     arguments.device = dev
     write_and_verify(arguments)

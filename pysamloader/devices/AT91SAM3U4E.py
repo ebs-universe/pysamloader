@@ -16,22 +16,22 @@
 # along with pysamloader.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from .samdevice import SAMDevice
+from ..samdevice import SAMDevice
 
 
-class AT91SAM7X512(SAMDevice):
-    EFC_FCR = 'FFFFFF64'
-    EFC_FSR = 'FFFFFF68'
-    AutoBaud = True
-    FullErase = True
-    WP_COMMAND = '01'
-    EWP_COMMAND = None
-    EA_COMMAND = '08'
-    FS_ADDRESS = '00100000'
+class AT91SAM3U4E(SAMDevice):
+    EFC_FCR = '400E0804'
+    EFC_FSR = '400E0808'
+    AutoBaud = False
+    FullErase = False
+    WP_COMMAND = None
+    EWP_COMMAND = '03'
+    EA_COMMAND = None
+    FS_ADDRESS = '00080000'
     PAGE_SIZE = 256
     SGPB_CMD = '0B'
-    CGPB_CMD = '0D'
-    SGP = [0, 0, 1]
+    CGPB_CMD = '0C'
+    SGP = [0, 1, 0]
 
     def __init__(self):
-        super(AT91SAM7X512, self).__init__()
+        super(AT91SAM3U4E, self).__init__()
