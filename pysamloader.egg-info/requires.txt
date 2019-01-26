@@ -1,9 +1,0 @@
-six
-wheel
-xmodem
-pyserial
-progress
-
-[docs]
-sphinx
-sphinx-argparse
