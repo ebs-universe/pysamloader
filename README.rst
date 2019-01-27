@@ -76,7 +76,7 @@ Script usage and arguments are listed here. This help listing can also be
 obtained on the command line with ``pysamloader --help``.
 
 .. argparse::
-    :module: pysamloader.pysamloader
+    :module: pysamloader.cli
     :func: _get_parser
     :prog: pysamloader
     :nodefault:
@@ -87,6 +87,17 @@ Known Issues
  - Writing to multiple flash planes is not currently supported. This
    application will always write to the first flash plane and will start at
    the beginning.
+
+Future Directions
+-----------------
+
+ - Add support for ``libftdi``/``libd2xx``/``libusb`` based backend for cases
+   where the device disables ``ftdi_sio`` for its normal operation.
+ - Add hooks for device auto-detection. Do not even bother to probe blindly
+   for SAM-BA - that is too dangerous. Instead rely on apriori knowledge of
+   signatures of device configuration, including VID, PID, Manufacturer,
+   Product, Serial Number, and USB endpoint descriptors.
+ - Add a clean and simple GUI.
 
 Links
 -----
