@@ -23,6 +23,12 @@ sufficiently versatile. Device support is easy enough to add, and I will do
 so as the need (and more importantly, the ability to test on other devices)
 presents itself. Pull requests are also welcome.
 
+Currently supported devices are :
+
+.. documentedlist::
+    :listobject: pysamloader.pysamloader.supported_devices
+    :header: "Device" "Interface" "Support Module"
+
 Requirements & Installation
 ---------------------------
 

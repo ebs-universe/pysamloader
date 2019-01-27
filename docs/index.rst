@@ -10,9 +10,9 @@ Documentation
 -------------
 
 .. toctree::
-   :maxdepth: 3
+    :maxdepth: 3
 
-   api
+    api
 
 Indices and tables
 ==================

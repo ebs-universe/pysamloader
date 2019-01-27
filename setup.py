@@ -41,7 +41,9 @@ setup(
         'progress',
     ],
     extras_require={
-        'docs': ['sphinx', 'sphinx-argparse'],
+        'docs': ['sphinx',
+                 'sphinx-argparse',
+                 'sphinxcontrib-documentedlist'],
     },
     platforms='any',
     entry_points={

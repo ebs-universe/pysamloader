@@ -161,24 +161,28 @@ def get_supported_devices():
     candidates = [f for f in os.listdir(devices_folder)
                   if os.path.isfile(os.path.join(devices_folder, f))
                   and not f.startswith('_')]
-    supported_devices = []
+    _supported_devices = []
     for candidate in candidates:
         name, ext = os.path.splitext(candidate)
         if ext == '.py':
             try:
                 dev_mod = importlib.import_module('.devices.{0}'.format(name),
                                                   'pysamloader')
-                getattr(dev_mod, name)()
-                supported_devices.append(name)
+                getattr(dev_mod, name)
+                _supported_devices.append((name, "SAM-BA UART",
+                                           "{0}.{1}".format(dev_mod.__name__, name)))
             except ImportError:
                 continue
-    return supported_devices
+    return _supported_devices
+
+
+supported_devices = get_supported_devices()
 
 
 def print_supported_devices():
     print("Supported devices : ")
     for d in get_supported_devices():
-        print(" - {0}".format(d))
+        print(" - {0}".format(d[0]))
 
 
 def print_serial_ports():
