@@ -14,7 +14,7 @@ def read(fname):
 
 setup(
     name="pysamloader",
-    version="0.2.2",
+    version="0.2.3",
     author="Chintalagiri Shashank",
     author_email="shashank@chintal.in",
     description="primitive python script for writing flash "
