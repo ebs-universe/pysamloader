@@ -25,6 +25,7 @@ import appdirs
 
 from xmodem import XMODEM
 from binascii import hexlify
+from six import PY2
 from six import StringIO
 
 from .samba import SamBAConnection
@@ -43,9 +44,14 @@ logger = logging.getLogger('pysamloader')
 
 def raw_write_page(samba, page_address, data):
     for i in range(0, 256, 4):
-        wbytes = "".join(byte for byte in reversed(data[i:i+4]))
+        wbytes = bytearray(data[i:i+4])
+        wbytes.reverse()
+        if PY2:
+            wbytes = hexlify(wbytes)
+        else:
+            wbytes = wbytes.hex()
         adrstr = hex(page_address + i)[2:].zfill(8)
-        samba.write_word(adrstr, hexlify(wbytes))
+        samba.write_word(adrstr, wbytes)
 
 
 def xm_write_page(samba, page_address, data):
@@ -68,7 +74,11 @@ def _page_writer(_writer, samba, device, page_address, bin_file):
         status = 1
     else:
         if len(data) < device.PAGE_SIZE:
-            data += "\255" * (device.PAGE_SIZE - len(data))
+            if PY2:
+                padding = "\255"
+            else:
+                padding = bytes("\255".encode())
+            data += padding * (device.PAGE_SIZE - len(data))
         status = 0
     logger.debug(len(data))
     logger.debug('Sending file chunk : \n {0}CEND'.format(hexlify(data)))
@@ -82,7 +92,7 @@ def _file_writer(_writer, samba, device, filename,
     if device.FullErase:
         samba.efc_eraseall()
     page_no = start_page
-    bin_file = open(filename, "r")
+    bin_file = open(filename, "rb")
     num_pages = int((os.fstat(bin_file.fileno())[6] + 128) / 256)
     p = progress_class(max=num_pages)
 
@@ -117,28 +127,34 @@ def verify(samba, device, filename, start_page=0, progress_class=None):
     Returns the total number of words with errors. 
 
     """
-    bin_file = open(filename, "r")
+    bin_file = open(filename, "rb")
     len_bytes = os.fstat(bin_file.fileno())[6]
     address = int(device.FS_ADDRESS, 16) + (start_page * device.PAGE_SIZE)
     errors = 0
     byte_address = 0
     p = progress_class(max=len_bytes/4)
     logger.info("Verifying Flash")
-    reversed_word = bin_file.read(4)
-    word = "".join(byte for byte in reversed(reversed_word))
+    reversed_word = bytearray(bin_file.read(4))
+    word = reversed_word
+    word.reverse()
     while reversed_word:
         p.next(note="{0}/{1} Bytes".format(byte_address, len_bytes))
-        result = samba.read_word(hex(address)[2:].zfill(8))
-        if not result.upper()[2:] == hexlify(word).upper():
-            logger.error("Verification Failed at {0} - {1} {2}"
-                         "".format(hex(address), result, hexlify(word)))
+        actual = samba.read_word(hex(address)[2:].zfill(8)).strip()
+        if PY2:
+            expected = hexlify(word)
+        else:
+            expected = word.hex()
+        if not actual.upper()[2:] == expected.upper():
+            logger.error("\nVerification Failed at {0} - {1} {2}"
+                         "".format(hex(address), actual, expected))
             errors = errors + 1
         else:
             logger.debug("Verified Word at {0} - {1} {2}"
-                         "".format(hex(address), result, hexlify(word)))
+                         "".format(hex(address), actual, expected))
         address = address + 4
-        reversed_word = bin_file.read(4)
-        word = "".join(byte for byte in reversed(reversed_word))
+        reversed_word = bytearray(bin_file.read(4))
+        word = reversed_word
+        word.reverse()
         byte_address = byte_address + 4
     p.finish()
     logger.info("Verification Complete. Words with Errors : " + str(errors))

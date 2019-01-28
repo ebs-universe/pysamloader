@@ -21,6 +21,7 @@ import logging
 import sys
 from time import sleep
 from serial import Serial
+from binascii import hexlify
 
 from .samdevice import SAMDevice
 
@@ -54,9 +55,10 @@ class SamBAConnection(object):
         """ Read a response from SAM-BA, delimited by > """
         char = ''
         data = ''
-        while char is not '>':
+        while char != '>':
             data += char
-            char = self.ser.read(1)
+            char = self.ser.read(1).decode()
+        logger.debug("Got response : {0}".format(data.strip()))
         return data
 
     def make_connection(self, auto_baud=False):
@@ -72,12 +74,12 @@ class SamBAConnection(object):
                 self.ser.write('\x80')
                 self.ser.write('#')
                 sleep(0.001)
-                resp = self.ser.read(1)
+                resp = self.ser.read(1).decode()
                 if resp is '>':
                     status = 1
                     logger.info("SAM-BA Auto-Baud Successful")
         self.flush_all()
-        self.ser.read(22)
+        self.ser.read(22).decode()
         sleep(1)
         self.write_message("V#")
         sleep(0.01)
@@ -97,7 +99,8 @@ class SamBAConnection(object):
     def write_message(self, msg):
         if self.ser.isOpen():
             self.flush_all()
-            self.ser.write(msg)
+            logger.debug("Writing to device : {0}".format(msg.encode()))
+            self.ser.write(msg.encode())
             return
         else:
             raise IOError("Serial port does not seem to be open!")
@@ -172,7 +175,7 @@ class SamBAConnection(object):
         msg = "w{0},#".format(address)
         logger.debug("Reading word with command : {0}".format(msg))
         self.write_message(msg)
-        return self.retrieve_response().strip()
+        return self.retrieve_response()
 
     def xm_init_sf(self, address):
         """ Initialize XMODEM file send to specified address """
@@ -183,7 +186,7 @@ class SamBAConnection(object):
         char = ''
         while char is not 'C':
             logger.info("Waiting for CRC")
-            char = self.ser.read(1)
+            char = self.ser.read(1).decode()
         return
 
     def xm_init_rf(self, address, size):
@@ -192,17 +195,18 @@ class SamBAConnection(object):
 
     def xm_getc(self, size):
         """ getc function for the xmodem protocol """
-        return self.ser.read(size)
+        return self.ser.read(size).decode()
 
     def xm_putc(self, data):
         """ putc function for the xmodem protocol """
-        self.ser.write(data)
+        self.ser.write(data.encode())
         return len(data)
 
     def efc_wready(self):
         """ Wait for EFC to report ready """
         status = self.efc_rstat()
         while not status:
+            logger.debug("Waiting for EFC")
             sleep(0.01)
             status = self.efc_rstat()
         return
@@ -221,9 +225,9 @@ class SamBAConnection(object):
         Returns True if EFC is ready, False if busy.
 
         """
-        efc_status = self.read_word(self._device.EFC_FSR)
-        logger.debug("EFC Status : {0}".format(efc_status[8:]))
-        return efc_status[9:] == "1"
+        efc_status = self.read_word(self._device.EFC_FSR).strip()
+        logger.debug("EFC Status : {0}".format(efc_status))
+        return efc_status[9] == "1"
 
     def efc_cleargpnvm(self, bno):
         """
