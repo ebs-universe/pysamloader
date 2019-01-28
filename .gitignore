@@ -1,3 +1,9 @@
 *.pyc
 *~
 *.swp
+*.egg-info/
+docs/_build/
+build/
+dist/
+pysamloader.spec
+.idea/
