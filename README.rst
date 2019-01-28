@@ -98,6 +98,7 @@ Future Directions
    signatures of device configuration, including VID, PID, Manufacturer,
    Product, Serial Number, and USB endpoint descriptors.
  - Add a clean and simple GUI.
+ - Add read capability for chip signature and/or silicon serial number.
 
 Links
 -----

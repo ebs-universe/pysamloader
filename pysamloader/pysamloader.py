@@ -77,7 +77,7 @@ def _page_writer(_writer, samba, device, page_address, bin_file):
 
 
 def _file_writer(_writer, samba, device, filename,
-                 start_page=0, set_boot=True, progress_class=None):
+                 start_page=0, progress_class=None):
     stat = 1
     if device.FullErase:
         samba.efc_eraseall()
@@ -92,23 +92,13 @@ def _file_writer(_writer, samba, device, filename,
         page_address = int(device.FS_ADDRESS, 16) + (page_no * device.PAGE_SIZE)
         adrstr = hex(page_address)[2:].zfill(8)
         logger.debug("Start Address of page {0} : {1}".format(page_no, adrstr))
-        stat = _writer(samba, device, page_address, bin_file)
+        stat = _page_writer(_writer, samba, device, page_address, bin_file)
         samba.efc_ewp(page_no)
         logger.debug("Page done : {0}".format(page_no))
         page_no = page_no + 1
         p.next(note="Page {0}/{1}".format(page_no, num_pages))
+    p.finish()
     logger.info("Writing to Flash Complete")
-
-    if set_boot:
-        logger.info("Setting GPNVM bit to boot from flash")
-        for i in range(3):
-            if device.SGP[i] == 1:
-                samba.efc_setgpnvm(i)
-            else:
-                samba.efc_cleargpnvm(i)
-    else:
-        logger.warning("Not setting GPNVM bit.")
-        logger.warning("Invoke with -g to have that happen.")
 
 
 def xmodem_sendf(*args, **kwargs):
@@ -132,12 +122,12 @@ def verify(samba, device, filename, start_page=0, progress_class=None):
     address = int(device.FS_ADDRESS, 16) + (start_page * device.PAGE_SIZE)
     errors = 0
     byte_address = 0
-    p = progress_class(max=len_bytes)
+    p = progress_class(max=len_bytes/4)
     logger.info("Verifying Flash")
     reversed_word = bin_file.read(4)
     word = "".join(byte for byte in reversed(reversed_word))
     while reversed_word:
-        p.next(note="{0} of {1} Bytes".format(byte_address, len_bytes))
+        p.next(note="{0}/{1} Bytes".format(byte_address, len_bytes))
         result = samba.read_word(hex(address)[2:].zfill(8))
         if not result.upper()[2:] == hexlify(word).upper():
             logger.error("Verification Failed at {0} - {1} {2}"
@@ -150,30 +140,70 @@ def verify(samba, device, filename, start_page=0, progress_class=None):
         reversed_word = bin_file.read(4)
         word = "".join(byte for byte in reversed(reversed_word))
         byte_address = byte_address + 4
+    p.finish()
     logger.info("Verification Complete. Words with Errors : " + str(errors))
     return errors
+
+
+def set_boot(samba, device):
+    logger.info("Setting GPNVM bit to boot from flash")
+    for i in range(3):
+        if device.SGP[i] == 1:
+            samba.efc_setgpnvm(i)
+        else:
+            samba.efc_cleargpnvm(i)
 
 
 def write_and_verify(args, progress_class=None):
     samba = SamBAConnection(port=args.port, baud=args.baud, device=args.device)
     if args.c is False:
         raw_sendf(samba, args.device, args.filename,
-                  set_boot=args.g, progress_class=progress_class)
-    samba.make_connection(auto_baud=args.ab)
+                  progress_class=progress_class)
     verify(samba, args.device, args.filename, progress_class=progress_class)
+    if args.g:
+        set_boot(samba, args.device)
+    else:
+        logger.warning("Not setting GPNVM bit.")
+        logger.warning("Invoke with -g to have that happen.")
 
 
-def get_supported_devices():
+def _get_device_folder():
     devices_folder_candidates = [
         os.path.join(appdirs.user_config_dir('pysamloader'), 'devices'),
         os.path.join(os.path.split(__file__)[0], 'devices')
     ]
     for candidate in devices_folder_candidates:
         if os.path.exists(candidate):
-            devices_folder = candidate
-            break
+            return candidate
     else:
         raise FileNotFoundError("Devices folder not found!")
+
+
+def get_device(name):
+    # See : https://stackoverflow.com/a/67692/1934174
+    devices_folder = _get_device_folder()
+    if sys.version_info.major == 3 and sys.version_info.minor >= 5:
+        spec = importlib.util.spec_from_file_location(
+            'pysamloader.devices.{}'.format(name),
+            os.path.join(devices_folder, '{0}.py'.format(name))
+        )
+        dev_mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(dev_mod)
+    elif sys.version_info.major == 3 and 3 <= sys.version_info.minor <= 4:
+        dev_mod = importlib.machinery.SourceFileLoader(
+            'pysamloader.devices.{}'.format(name),
+            os.path.join(devices_folder, '{0}.py'.format(name))
+        ).load_module()
+    else:
+        dev_mod = imp.load_source(
+            'pysamloader.devices.{}'.format(name),
+            os.path.join(devices_folder, '{0}.py'.format(name))
+        )
+    return getattr(dev_mod, name)
+
+
+def get_supported_devices():
+    devices_folder = _get_device_folder()
 
     candidates = [f for f in os.listdir(devices_folder)
                   if os.path.isfile(os.path.join(devices_folder, f))
@@ -183,25 +213,7 @@ def get_supported_devices():
         name, ext = os.path.splitext(candidate)
         if ext == '.py':
             try:
-                # See : https://stackoverflow.com/a/67692/1934174
-                if sys.version_info.major == 3 and sys.version_info.minor >= 5:
-                    spec = importlib.util.spec_from_file_location(
-                        'pysamloader.devices.{}'.format(name),
-                        os.path.join(devices_folder, '{0}.py'.format(name))
-                    )
-                    dev_mod = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(dev_mod)
-                elif sys.version_info.major == 3 and 3 <= sys.version_info.minor <= 4:
-                    dev_mod = importlib.machinery.SourceFileLoader(
-                        'pysamloader.devices.{}'.format(name),
-                        os.path.join(devices_folder, '{0}.py'.format(name))
-                    ).load_module()
-                else:
-                    dev_mod = imp.load_source(
-                        'pysamloader.devices.{}'.format(name),
-                        os.path.join(devices_folder, '{0}.py'.format(name))
-                    )
-                getattr(dev_mod, name)
+                dev_mod = get_device(name)
                 _supported_devices.append((name, "SAM-BA UART",
                                            "{0}.{1}".format(dev_mod.__name__, name)))
             except ImportError:

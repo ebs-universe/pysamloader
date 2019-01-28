@@ -21,11 +21,11 @@
 
 import logging
 import argparse
-import importlib
 
 from serial.tools import list_ports
 
 from .terminal import ProgressBar
+from .pysamloader import get_device
 from .pysamloader import get_supported_devices
 from .pysamloader import write_and_verify
 
@@ -103,12 +103,10 @@ def main():
         arguments.device = 'ATSAM3U4E'
 
     try:
-        dev_mod = importlib.import_module(
-            '.devices.{0}'.format(arguments.device), 'pysamloader')
-        dev = getattr(dev_mod, arguments.device)()
+        dev = get_device(arguments.device)
     except ImportError:
         from .samdevice import SAMDevice
-        dev = SAMDevice()
+        dev = SAMDevice
         logger.warning("Device is not supported!")
         print_supported_devices()
 

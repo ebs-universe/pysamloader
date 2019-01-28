@@ -33,7 +33,7 @@ class SamBAConnection(object):
 
     def __init__(self, port='/dev/ttyUSB1', baud=115200, device=None):
         """ Opens the serial port for the SAM-BA connection """
-        self.ser.baud_rate = baud
+        self.ser.baudrate = baud
         self.ser.port = port
         self.ser.timeout = 1
         try:
@@ -61,6 +61,8 @@ class SamBAConnection(object):
 
     def make_connection(self, auto_baud=False):
         """ Test connection to SAM-BA by reading its version """
+        logger.debug("Connecting to SAM-BA on {0} at {1}".format(
+            self.ser.port, self.ser.baudrate))
         if auto_baud is True:
             """Auto Baud"""
             logger.info("Attempting Auto-Baud with SAM-BA")
@@ -77,11 +79,11 @@ class SamBAConnection(object):
         self.flush_all()
         self.ser.read(22)
         sleep(1)
-        self.ser.write("V#")
+        self.write_message("V#")
         sleep(0.01)
         resp = self.retrieve_response()
         logger.info("SAM-BA Version : ")
-        logger.info(resp)
+        logger.info(resp.strip())
         if resp:
             return
         else:
@@ -92,20 +94,25 @@ class SamBAConnection(object):
         self.ser.flushInput()
         self.ser.flushOutput()
 
+    def write_message(self, msg):
+        if self.ser.isOpen():
+            self.flush_all()
+            self.ser.write(msg)
+            return
+        else:
+            raise IOError("Serial port does not seem to be open!")
+
     def write_byte(self, address, contents):
         """
         Write 1 byte at a specific address.
         Both address and contents expected to be character strings
 
         """
-        if self.ser.isOpen():
-            self.flush_all()
-            logger.debug("Writing byte at {0} : {1}"
-                         "".format(address, contents))
-            self.ser.write("O{0},{1}#".format(address, contents))
-            return self.retrieve_response()
-        else:
-            return None
+        self.flush_all()
+        logger.debug("Writing byte at {0} : {1}"
+                     "".format(address, contents))
+        self.write_message("O{0},{1}#".format(address, contents))
+        return self.retrieve_response()
 
     def write_hword(self, address, contents):
         """
@@ -113,14 +120,11 @@ class SamBAConnection(object):
         Both address and contents expected to be character strings
 
         """
-        if self.ser.isOpen():
-            self.flush_all()
-            logger.debug("Writing half word at {0} : {1}"
-                         "".format(address, contents))
-            self.ser.write("H{0},{1}#".format(address, contents))
-            return self.retrieve_response()
-        else:
-            return None
+        self.flush_all()
+        logger.debug("Writing half word at {0} : {1}"
+                     "".format(address, contents))
+        self.write_message("H{0},{1}#".format(address, contents))
+        return self.retrieve_response()
 
     def write_word(self, address, contents):
         """
@@ -128,14 +132,11 @@ class SamBAConnection(object):
         Both address and contents expected to be character strings
 
         """
-        if self.ser.isOpen():
-            self.flush_all()
-            logger.debug("Writing word at {0} : {1}"
-                         "".format(address, contents))
-            self.ser.write("W{0},{1}#".format(address, contents))
-            return self.retrieve_response()
-        else:
-            return None
+        self.flush_all()
+        logger.debug("Writing word at {0} : {1}"
+                     "".format(address, contents))
+        self.write_message("W{0},{1}#".format(address, contents))
+        return self.retrieve_response()
 
     def read_byte(self, address):
         """
@@ -143,14 +144,11 @@ class SamBAConnection(object):
         Both address and returned contents are character strings
 
         """
-        if self.ser.isOpen():
-            self.flush_all()
-            msg = "o{0},#".format(address)
-            logger.debug("Reading byte with command : {0}".format(msg))
-            self.ser.write(msg)
-            return self.retrieve_response().strip()
-        else:
-            return ''
+        self.flush_all()
+        msg = "o{0},#".format(address)
+        logger.debug("Reading byte with command : {0}".format(msg))
+        self.write_message(msg)
+        return self.retrieve_response().strip()
 
     def read_hword(self, address):
         """
@@ -158,15 +156,11 @@ class SamBAConnection(object):
         Both address and returned contents are character strings
 
         """
-        pass
-        if self.ser.isOpen():
-            self.flush_all()
-            msg = "h{0},#".format(address)
-            logger.debug("Reading half word with command : {0}".format(msg))
-            self.ser.write(msg)
-            return self.retrieve_response().strip()
-        else:
-            return ''
+        self.flush_all()
+        msg = "h{0},#".format(address)
+        logger.debug("Reading half word with command : {0}".format(msg))
+        self.write_message(msg)
+        return self.retrieve_response().strip()
 
     def read_word(self, address):
         """
@@ -174,27 +168,23 @@ class SamBAConnection(object):
         Both address and returned contents are character strings
 
         """
-        if self.ser.isOpen():
-            self.flush_all()
-            msg = "w{0},#".format(address)
-            logger.debug("Reading word with command : {0}".format(msg))
-            self.ser.write(msg)
-            return self.retrieve_response().strip()
-        else:
-            return ''
+        self.flush_all()
+        msg = "w{0},#".format(address)
+        logger.debug("Reading word with command : {0}".format(msg))
+        self.write_message(msg)
+        return self.retrieve_response().strip()
 
     def xm_init_sf(self, address):
         """ Initialize XMODEM file send to specified address """
-        if self.ser.isOpen():
-            self.flush_all()
-            msg = "S{0},#".format(address)
-            logger.debug("Starting send file with command : {0}".format(msg))
-            self.ser.write(msg)
-            char = ''
-            while char is not 'C':
-                logger.info("Waiting for CRC")
-                char = self.ser.read(1)
-            return
+        self.flush_all()
+        msg = "S{0},#".format(address)
+        logger.debug("Starting send file with command : {0}".format(msg))
+        self.write_message(msg)
+        char = ''
+        while char is not 'C':
+            logger.info("Waiting for CRC")
+            char = self.ser.read(1)
+        return
 
     def xm_init_rf(self, address, size):
         """ Initialize XMODEM file read from specified address """
@@ -241,14 +231,13 @@ class SamBAConnection(object):
         bno is an integer
 
         """
-        if self.ser.isOpen():
-            self.efc_wready()
-            self.write_word(self._device.EFC_FCR,
-                            '5A{0}{1}'.format(
-                                hex(bno)[2:].zfill(4),
-                                self._device.CGPB_CMD
-                            ))
-            self.efc_wready()
+        self.efc_wready()
+        self.write_word(self._device.EFC_FCR,
+                        '5A{0}{1}'.format(
+                            hex(bno)[2:].zfill(4),
+                            self._device.CGPB_CMD
+                        ))
+        self.efc_wready()
 
     def efc_setgpnvm(self, bno):
         """
@@ -256,20 +245,18 @@ class SamBAConnection(object):
         bno is an integer
 
         """
-        if self.ser.isOpen():
-            self.efc_wready()
-            self.write_word(self._device.EFC_FCR,
-                            '5A{0}{1}'.format(
-                                hex(bno)[2:].zfill(4),
-                                self._device.SGPB_CMD
-                            ))
-            self.efc_wready()
+        self.efc_wready()
+        self.write_word(self._device.EFC_FCR,
+                        '5A{0}{1}'.format(
+                            hex(bno)[2:].zfill(4),
+                            self._device.SGPB_CMD
+                        ))
+        self.efc_wready()
         return
 
     def efc_eraseall(self):
         """ EFC Function to Erase All """
-        if self.ser.isOpen():
-            self.efc_wready()
-            self.write_word(self._device.EFC_FCR,
-                            '5A0000{0}'.format(self._device.EAC))
-            self.efc_wready()
+        self.efc_wready()
+        self.write_word(self._device.EFC_FCR,
+                        '5A0000{0}'.format(self._device.EAC))
+        self.efc_wready()
