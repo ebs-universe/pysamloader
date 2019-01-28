@@ -19,15 +19,23 @@
 # along with pysamloader.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import sys
 import logging
-import importlib
+import appdirs
 
 from xmodem import XMODEM
 from binascii import hexlify
 from six import StringIO
 
-
 from .samba import SamBAConnection
+
+if sys.version_info.major == 3 and sys.version_info.minor >= 5:
+    import importlib.util
+elif sys.version_info.major == 3 and 3 <= sys.version_info.minor <= 4:
+    import importlib.machinery
+else:
+    import imp
+
 
 logging.basicConfig(format='[%(levelname)8s][%(name)s] %(message)s')
 logger = logging.getLogger('pysamloader')
@@ -156,7 +164,17 @@ def write_and_verify(args, progress_class=None):
 
 
 def get_supported_devices():
-    devices_folder = os.path.join(os.path.split(__file__)[0], 'devices')
+    devices_folder_candidates = [
+        os.path.join(appdirs.user_config_dir('pysamloader'), 'devices'),
+        os.path.join(os.path.split(__file__)[0], 'devices')
+    ]
+    for candidate in devices_folder_candidates:
+        if os.path.exists(candidate):
+            devices_folder = candidate
+            break
+    else:
+        raise FileNotFoundError("Devices folder not found!")
+
     candidates = [f for f in os.listdir(devices_folder)
                   if os.path.isfile(os.path.join(devices_folder, f))
                   and not f.startswith('_')]
@@ -165,8 +183,24 @@ def get_supported_devices():
         name, ext = os.path.splitext(candidate)
         if ext == '.py':
             try:
-                dev_mod = importlib.import_module('.devices.{0}'.format(name),
-                                                  'pysamloader')
+                # See : https://stackoverflow.com/a/67692/1934174
+                if sys.version_info.major == 3 and sys.version_info.minor >= 5:
+                    spec = importlib.util.spec_from_file_location(
+                        'pysamloader.devices.{}'.format(name),
+                        os.path.join(devices_folder, '{0}.py'.format(name))
+                    )
+                    dev_mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(dev_mod)
+                elif sys.version_info.major == 3 and 3 <= sys.version_info.minor <= 4:
+                    dev_mod = importlib.machinery.SourceFileLoader(
+                        'pysamloader.devices.{}'.format(name),
+                        os.path.join(devices_folder, '{0}.py'.format(name))
+                    ).load_module()
+                else:
+                    dev_mod = imp.load_source(
+                        'pysamloader.devices.{}'.format(name),
+                        os.path.join(devices_folder, '{0}.py'.format(name))
+                    )
                 getattr(dev_mod, name)
                 _supported_devices.append((name, "SAM-BA UART",
                                            "{0}.{1}".format(dev_mod.__name__, name)))

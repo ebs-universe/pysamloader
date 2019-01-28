@@ -36,6 +36,7 @@ setup(
     install_requires=[
         'six',
         'wheel',
+        'appdirs',
         'xmodem',
         'pyserial',
         'progress',
@@ -43,7 +44,8 @@ setup(
     extras_require={
         'docs': ['sphinx',
                  'sphinx-argparse',
-                 'sphinxcontrib-documentedlist'],
+                 'sphinxcontrib-documentedlist',
+                 'sphinx-rtd-theme'],
     },
     platforms='any',
     entry_points={
