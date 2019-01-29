@@ -6,4 +6,8 @@ docs/_build/
 build/
 dist/
 .idea/
-.doit.db
+.doit.db*
+.eggs/
+env-pysamloader/
+pysamloader/_version.py
+.vs/
