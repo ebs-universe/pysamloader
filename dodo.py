@@ -2,6 +2,7 @@
 
 import os
 import sys
+import six
 import platform
 
 from pkg_resources import get_distribution
@@ -36,8 +37,12 @@ def _base_folder():
 
 
 def _dist_folder():
+    return os.path.join(_base_folder(), 'dist')
+
+
+def _binary_dist_folder():
     target = 'binary-{0}'.format(platform.system().lower())
-    return os.path.join(_base_folder(), 'dist', target)
+    return os.path.join(_dist_folder(), target)
 
 
 def _executable_name():
@@ -45,10 +50,10 @@ def _executable_name():
 
 
 def _executable_path():
-    return os.path.join(_dist_folder(), _executable_name())
+    return os.path.join(_binary_dist_folder(), _executable_name())
 
 
-def task_build():
+def task_build_binary():
     if platform.system() == 'Linux':
         prefix = "LD_LIBRARY_PATH={0} ".format(_get_python_shared_lib())
     else:
@@ -67,12 +72,12 @@ def _package_name():
 
 
 def _package_path():
-    return os.path.join(_dist_folder(), _package_name())
+    return os.path.join(_binary_dist_folder(), _package_name())
 
 
 def _create_package():
     package_content = [
-        (os.path.join(_dist_folder(), _executable_name()), _executable_name()),
+        (os.path.join(_binary_dist_folder(), _executable_name()), _executable_name()),
         (os.path.join(_base_folder(), 'LICENSE'), 'LICENSE'),
         (os.path.join(_base_folder(), 'README.rst'), 'README.rst'),
         (os.path.join(_base_folder(), 'pysamloader', 'devices'), 'devices'),
@@ -93,9 +98,61 @@ def _create_package():
         pass
 
 
-def task_package():
+def task_package_binary():
     return {
-        'task_dep': ['build'],
+        'task_dep': ['build_binary'],
         'actions': [_create_package],
         'targets': [_package_path()]
+    }
+
+
+def task_publish_binary():
+    return {
+        'actions': []
+    }
+
+
+def _sdist_name():
+    return '{0}-{1}.tar.gz'.format(SCRIPT_NAME, SCRIPT_VERSION)
+
+
+def _bdist_name():
+    if six.PY2:
+        pytag = 'py2'
+    elif six.PY3:
+        pytag = 'py3'
+    else:
+        pytag = 'unknown'
+    return '{0}-{1}-{2}-none-any.whl'.format(SCRIPT_NAME, SCRIPT_VERSION, pytag)
+
+
+def task_build_pypi():
+    return {
+        'actions': ['python setup.py sdist bdist_wheel'],
+        'targets': [
+            os.path.join(_dist_folder(), _sdist_name()),
+            os.path.join(_dist_folder(), _bdist_name()),
+        ]
+    }
+
+
+def task_publish_pypi():
+    return {
+        'file_dep': [
+            os.path.join(_dist_folder(), _sdist_name()),
+            os.path.join(_dist_folder(), _bdist_name()),
+        ],
+        'actions': [
+            'twine upload %(dependencies)s --sign'
+        ]
+    }
+
+
+def task_publish():
+    return {
+        'actions': [],
+        'task_dep': [
+            'publish_binary',
+            'publish_pypi'
+        ]
     }
