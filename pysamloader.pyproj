@@ -19,6 +19,9 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="docs\api.rst" />
+    <Content Include="docs\index.rst" />
+    <Content Include="docs\Makefile" />
     <Content Include="pysamloader.spec" />
     <Content Include="README.rst" />
   </ItemGroup>
@@ -34,6 +37,7 @@
     <Compile Include="pysamloader\samdevice.py" />
     <Compile Include="pysamloader\terminal.py" />
     <Compile Include="pysamloader\__init__.py" />
+    <Compile Include="run.py" />
     <Compile Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
