@@ -2,10 +2,10 @@
 pysamloader
 ===========
 
-``pysamloader`` is a python script for writing flash on Atmel's ARM chips
+``pysamloader`` is a python library for writing flash on Atmel's ARM chips
 via SAM-BA. Originally written years ago when Atmel's standard tools were
-unavailable or unusable on Linux, the scripts have been adapted to serve
-narrower but specific use cases.
+unavailable or unusable on Linux, it has been adapted to serve narrower but 
+specific use cases.
 
 Specifically, ``pysamloader`` is intended to be :
 
@@ -13,9 +13,8 @@ Specifically, ``pysamloader`` is intended to be :
     - Easily installable across platforms
     - Usable from within larger python applications or scripts
 
-Currently, ``pysamloader`` might not satisfy any of those criteria. It seems
-to be reasonably stable on a tiny set of supported devices with some
-additional limitations, but that's about it.
+Currently, ``pysamloader`` seems to be reasonably stable on a tiny set of 
+supported devices.
 
 If you happen to use ``pysamloader``, or wish to use it, let me know along
 with any feedback you might have to ensure the tool is stable, reliable, and
@@ -23,6 +22,7 @@ sufficiently versatile. Device support is easy enough to add, and I will do
 so as the need (and more importantly, the ability to test on other devices)
 presents itself. Pull requests are also welcome.
 
+See the ``pysamloader/devices`` folder for included device support modules. 
 Currently supported devices are :
 
 .. documentedlist::
@@ -32,31 +32,54 @@ Currently supported devices are :
 Requirements & Installation
 ---------------------------
 
-``pysamloader`` should work on any platform which supports ``python``.
-It is best tested on Linux followed by Windows (10 and 7).
+``pysamloader`` should work on any platform which supports ``python``. It is 
+best tested on Linux followed by on Windows (10 and 7).
 
-``pysamloader`` currently supports both Python 2 and Python 3. However,
-Python 2 support is likely to be removed in the near future.
+``pysamloader`` supports both Python 2 (2.7.x) and Python 3 (>3.5). Python 2 
+support is likely to be removed in the near future.
 
-Currently, ``pysamloader`` is expected to be pip-installed. It can be
-safely installed into a ``virtualenv``. There are no distro-specific
-packages or windows installers available.
+In general, ``pysamloader`` is expected to be pip-installed. It can be safely 
+installed into a virtualenv. There are no distro-specific packages or windows 
+installers available. 
 
-Installing ``pysamloader`` for most users would be simply :
+As long as you have a functioning python installation of sufficient version,
+installing ``pysamloader`` would be simply :
 
 .. code-block:: console
 
     $ pip install pysamloader
 
-If you wish to develop, modify the sources, or otherwise get the latest
-version, it can be installed from a clone of the git repository (or
-clone thereof) as follows :
+If you require pre-built binaries, they are available for 64-bit Linux and 
+Windows. However, be aware that these binaries are not thoroughly tested, 
+and your mileage may vary based on your specific operating system and machine 
+architecture. You will also have to manually copy the included ``devices`` 
+folder to the correct location. (See below)
+
+If you wish to develop, modify the sources, or otherwise get the latest 
+version, it can be installed from a clone of the git repository (or from a 
+source package) as follows :
 
 .. code-block:: console
 
     $ git clone https://github.com/chintal/pysamloader.git
     $ cd pysamloader
     $ pip install -e .
+
+The ``pysamloader/devices`` folder contains the included device support 
+modules, each of which is a python file with a single class of the same name, 
+containing device specific information about one device. This folder can be 
+copied into a separate location where you can safely add, remove, or modify 
+device configuration as needed. This step is generally optional, but will be 
+required if you are using the binary packages. The location is that provided 
+by ``user_config_dir`` of the python ``appdirs`` package, specifically : 
+
+    - Linux : ``~/.config/pysamloader``
+	- Windows : ``C:\Users\<username>\AppData\Local\pysamloader\pysamloader``
+
+If/when they are eventually created, ``pysamloader`` installers, aside from 
+the simple ``pip install pysamloader``, will likely create this folder and
+populate it as a part of the install process. 
+
 
 Usage
 -----
