@@ -84,10 +84,29 @@ def _bdist_name():
     return '{0}-{1}-{2}-none-any.whl'.format(SCRIPT_NAME, SCRIPT_VERSION, pytag)
 
 
+def _clean_stale_version():
+    version_stub = os.path.join(_base_folder(), SCRIPT_NAME, '_version.py')
+    if os.path.exists(version_stub):
+        os.remove(version_stub)
+
+def _inject_version():
+    # Build version file for injection into the binary
+    with open(os.path.join(_base_folder(), SCRIPT_NAME, '_version.py'), 'w') as f:
+	    f.write('__version__ = "{0}"'.format(SCRIPT_VERSION))
+
+def task_prep_version():
+    return {
+        'actions': [
+            _clean_stale_version,
+            _inject_version
+        ]
+    }
+
 def task_build_binary():
     return {
         'actions': [pyi_prefix + 'pyinstaller {0}.spec'.format(SCRIPT_NAME)],
-        'targets': [_executable_path()]
+        'targets': [_executable_path()],
+        'task_dep': ['prep_version']
     }
 
 
@@ -149,7 +168,8 @@ def task_build_pypi():
         'targets': [
             os.path.join(_dist_folder(), _sdist_name()),
             os.path.join(_dist_folder(), _bdist_name()),
-        ]
+        ],
+        'task_dep': ['prep_version']
     }
 
 

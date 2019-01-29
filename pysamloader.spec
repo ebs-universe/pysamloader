@@ -4,13 +4,6 @@ import os
 import platform
 import PyInstaller.config
 
-# Build version file for injection into the binary
-from pkg_resources import get_distribution
-script_version = get_distribution('pysamloader').version
-
-with open(os.path.join(os.getcwd(), 'pysamloader', '_version.py'), 'w') as f:
-	f.write('__version__ = "{0}"'.format(script_version))
-
 # Configure paths
 target = 'binary-{0}'.format(platform.system().lower())
 
