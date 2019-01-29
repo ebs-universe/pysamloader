@@ -3,13 +3,21 @@
 import os
 import sys
 import six
+import shutil
 import platform
 
-from pkg_resources import get_distribution
+from doit.task import clean_targets
+from setuptools_scm import get_version
+
+# Application Information
+# -----------------------
 
 SCRIPT_NAME = 'pysamloader'
-SCRIPT_VERSION = get_distribution(SCRIPT_NAME).version
+SCRIPT_VERSION = get_version(root='.', relative_to=__file__)
 
+
+# Platform and Build Environment Information
+# ------------------------------------------
 
 def _get_python_shared_lib():
     real_exec = sys.executable
@@ -19,6 +27,12 @@ def _get_python_shared_lib():
         os.path.join(os.path.split(real_exec)[0], os.pardir, 'lib')
     )
 
+if six.PY2:
+    pytag = 'py2'
+elif six.PY3:
+    pytag = 'py3'
+else:
+    pytag = 'unknown'
 
 if platform.system() == 'Linux':
     import tarfile
@@ -36,89 +50,67 @@ else:
     raise NotImplementedError("Platform not supported : {0}"
                               "".format(platform.system()))
 
+# Names and Paths
+# ---------------
 
-def _base_folder():
-    return os.path.join(os.path.split(__file__)[0])
-
-
-def _dist_folder():
-    return os.path.join(_base_folder(), 'dist')
-
-
-def _binary_dist_folder():
-    target = 'binary-{0}'.format(platform.system().lower())
-    return os.path.join(_dist_folder(), target)
-
-
-def _executable_name():
-    return SCRIPT_NAME + executable_ext
-
-
-def _executable_path():
-    return os.path.join(_binary_dist_folder(), _executable_name())
+_base_folder = os.path.join(os.path.split(__file__)[0])
+_work_folder = os.path.join(_base_folder, 'build')
+_dist_folder = os.path.join(_base_folder, 'dist')
+_binary_dist_folder = os.path.join(
+    _dist_folder, 'binary-{0}'.format(platform.system().lower()))
+_executable_name = SCRIPT_NAME + executable_ext
+_executable_path = os.path.join(_binary_dist_folder, _executable_name)
+_binary_package_name = "{0}-{1}-{2}-{3}{4}".format(
+    SCRIPT_NAME, SCRIPT_VERSION,
+    platform.system().lower(), platform.machine().lower(), package_ext)
+_binary_package_path = os.path.join(_binary_dist_folder, _binary_package_name)
+_sdist_name = '{0}-{1}.tar.gz'.format(SCRIPT_NAME, SCRIPT_VERSION)
+_bdist_name = '{0}-{1}-{2}-none-any.whl'.format(SCRIPT_NAME, SCRIPT_VERSION, pytag)
+_egg_info_folder = os.path.join(_base_folder, "{0}.egg-info".format(SCRIPT_NAME))
 
 
-def _binary_package_name():
-    return "{0}-{1}-{2}-{3}{4}".format(
-        SCRIPT_NAME, SCRIPT_VERSION,
-        platform.system().lower(), platform.machine().lower(), 
-        package_ext
-    )
-
-
-def _binary_package_path():
-    return os.path.join(_binary_dist_folder(), _binary_package_name())
-
-
-def _sdist_name():
-    return '{0}-{1}.tar.gz'.format(SCRIPT_NAME, SCRIPT_VERSION)
-
-
-def _bdist_name():
-    if six.PY2:
-        pytag = 'py2'
-    elif six.PY3:
-        pytag = 'py3'
-    else:
-        pytag = 'unknown'
-    return '{0}-{1}-{2}-none-any.whl'.format(SCRIPT_NAME, SCRIPT_VERSION, pytag)
-
-
-def _clean_stale_version():
-    version_stub = os.path.join(_base_folder(), SCRIPT_NAME, '_version.py')
-    if os.path.exists(version_stub):
-        os.remove(version_stub)
-
+# Build Steps
+# -----------
 
 def _inject_version():
     # Build version file for injection into the binary
-    with open(os.path.join(_base_folder(), SCRIPT_NAME, '_version.py'), 'w') as f:
+    with open(os.path.join(_base_folder, SCRIPT_NAME, '_version.py'), 'w') as f:
         f.write('__version__ = "{0}"'.format(SCRIPT_VERSION))
 
 
-def task_prep_version():
+def _clean_work_folder():
+    if not os.path.exists(_work_folder):
+        return
+    shutil.rmtree(_work_folder)
+
+
+def task_setup_build():
     return {
-        'actions': [
-            _clean_stale_version,
-            _inject_version
-        ]
+        'actions': [_inject_version],
+        'targets': [
+            os.path.join(_base_folder, SCRIPT_NAME, '_version.py'),
+            _dist_folder,
+        ],
+        'clean': [_clean_work_folder, clean_targets]
     }
 
 
 def task_build_binary():
     return {
         'actions': [pyi_prefix + 'pyinstaller {0}.spec'.format(SCRIPT_NAME)],
-        'targets': [_executable_path()],
-        'task_dep': ['prep_version']
+        'targets': [_executable_path, 
+                    _binary_dist_folder],
+        'task_dep': ['setup_build'],
+        'clean': True
     }
 
 
 def _create_binary_package():
     package_content = [
-        (os.path.join(_binary_dist_folder(), _executable_name()), _executable_name()),
-        (os.path.join(_base_folder(), 'LICENSE'), 'LICENSE'),
-        (os.path.join(_base_folder(), 'README.rst'), 'README.rst'),
-        (os.path.join(_base_folder(), 'pysamloader', 'devices'), 'devices'),
+        (os.path.join(_binary_dist_folder, _executable_name), _executable_name),
+        (os.path.join(_base_folder, 'LICENSE'), 'LICENSE'),
+        (os.path.join(_base_folder, 'README.rst'), 'README.rst'),
+        (os.path.join(_base_folder, 'pysamloader', 'devices'), 'devices'),
     ]
 
     def _filter_py(tarinfo):
@@ -129,14 +121,14 @@ def _create_binary_package():
         return tarinfo
 
     if platform.system() == 'Linux':
-        print("Create Tarfile {0}".format(_binary_package_path()), file=sys.stderr)
-        with tarfile.open(_binary_package_path(), "w:gz") as tar:
+        print("Create Tarfile {0}".format(_binary_package_path), file=sys.stderr)
+        with tarfile.open(_binary_package_path, "w:gz") as tar:
             for item, arc in package_content:
                 print("Adding {0}".format(item), file=sys.stderr)
                 tar.add(item, arcname=arc, filter=_filter_py)
     elif platform.system() == 'Windows':
-        print("Create Zipfile {0}".format(_binary_package_path()), file=sys.stderr)
-        with zipfile.ZipFile(_binary_package_path(), "w") as zfile:
+        print("Create Zipfile {0}".format(_binary_package_path), file=sys.stderr)
+        with zipfile.ZipFile(_binary_package_path, "w") as zfile:
             for item, arc in package_content:
                 if os.path.isfile(item):
                     print("Adding {0}".format(item), file=sys.stderr)
@@ -154,14 +146,15 @@ def task_package_binary():
     return {
         'task_dep': ['build_binary'],
         'actions': [_create_binary_package],
-        'targets': [_binary_package_path()]
+        'targets': [_binary_package_path],
+        'clean': True
     }
 
 
 def task_publish_binary():
     return {
         'actions': [],
-        'file_dep': [_binary_package_path()],
+        'file_dep': [_binary_package_path],
     }
 
 
@@ -169,10 +162,18 @@ def task_build_pypi():
     return {
         'actions': ['python setup.py sdist bdist_wheel'],
         'targets': [
-            os.path.join(_dist_folder(), _sdist_name()),
-            os.path.join(_dist_folder(), _bdist_name()),
+            os.path.join(_dist_folder, _sdist_name),
+            os.path.join(_dist_folder, _bdist_name),
+            os.path.join(_egg_info_folder, "dependency_links.txt"),
+            os.path.join(_egg_info_folder, "entry_points.txt"),
+            os.path.join(_egg_info_folder, "PKG-INFO"),
+            os.path.join(_egg_info_folder, "requires.txt"),
+            os.path.join(_egg_info_folder, "SOURCES.txt"),
+            os.path.join(_egg_info_folder, "top_level.txt"),
+            _egg_info_folder,
         ],
-        'task_dep': ['prep_version']
+        'task_dep': ['setup_build'],
+        'clean': True
     }
 
 
@@ -183,12 +184,22 @@ def task_publish_pypi():
         }
     return {
         'file_dep': [
-            os.path.join(_dist_folder(), _sdist_name()),
-            os.path.join(_dist_folder(), _bdist_name()),
+            os.path.join(_dist_folder, _sdist_name),
+            os.path.join(_dist_folder, _bdist_name),
         ],
         'actions': [
             'twine upload %(dependencies)s --sign'
         ]
+    }
+
+
+def task_build():
+    return {
+        'actions': [],
+        'task_dep': [
+            'build_binary',
+            'build_pypi'
+        ],
     }
 
 
