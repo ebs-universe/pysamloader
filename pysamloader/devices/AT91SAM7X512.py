@@ -16,7 +16,7 @@
 # along with pysamloader.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from ..samdevice import SAMDevice
+from pysamloader.samdevice import SAMDevice
 
 
 class AT91SAM7X512(SAMDevice):
