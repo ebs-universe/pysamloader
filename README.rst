@@ -74,7 +74,7 @@ required if you are using the binary packages. The location is that provided
 by ``user_config_dir`` of the python ``appdirs`` package, specifically : 
 
     - Linux : ``~/.config/pysamloader``
-	- Windows : ``C:\Users\<username>\AppData\Local\pysamloader\pysamloader``
+    - Windows : ``C:\Users\<username>\AppData\Local\pysamloader\pysamloader``
 
 If/when they are eventually created, ``pysamloader`` installers, aside from 
 the simple ``pip install pysamloader``, will likely create this folder and
