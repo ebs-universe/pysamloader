@@ -28,6 +28,7 @@ from .terminal import ProgressBar
 from .pysamloader import get_device
 from .pysamloader import get_supported_devices
 from .pysamloader import write_and_verify
+from . import __version__
 
 logger = logging.getLogger('cli')
 
@@ -53,10 +54,12 @@ def _get_parser():
                         help="Set GPNVM bit when done writing. Needed to "
                              "switch device boot from SAM-BA ROM to Flash "
                              "program")
+    parser.add_argument('-V', action='store_true',
+                        help="Show version information and exit")
     parser.add_argument('-v', action='store_true',
                         help="Verbose debug information")
     parser.add_argument('-c', action='store_true',
-                        help="Verify Only. Do not write")
+                        help="Verify Only. Do not write.")
     parser.add_argument('filename', metavar='file', nargs='?',
                         help="Binary file to be burnt into the chip")
     parser.add_argument('--port', metavar='port', default="/dev/ttyUSB1",
@@ -68,9 +71,9 @@ def _get_parser():
     parser.add_argument('-d', '--device', metavar='device',
                         help="ARM Device. Default ATSAM3U4E")
     parser.add_argument('--lp', '--list-ports', action='store_true',
-                        help="List available serial ports")
+                        help="List available serial ports and exit")
     parser.add_argument('--ld', '--list-devices', action='store_true',
-                        help="List supported devices")
+                        help="List supported devices and exit")
     return parser
 
 
@@ -86,6 +89,10 @@ def main():
         logger.setLevel(logging.INFO)
         logging.getLogger('pysamloader').setLevel(logging.INFO)
         logging.getLogger('samba').setLevel(logging.INFO)
+
+    if arguments.V:
+        print("pysamloader {0}".format(__version__))
+        return
 
     if arguments.lp:
         return print_serial_ports()

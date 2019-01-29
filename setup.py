@@ -14,7 +14,7 @@ def read(fname):
 
 setup(
     name="pysamloader",
-    version="0.2.4",
+    use_scm_version={"root": ".", "relative_to": __file__},
     author="Chintalagiri Shashank",
     author_email="shashank@chintal.in",
     description="primitive python script for writing flash "
@@ -35,17 +35,23 @@ setup(
     ],
     install_requires=[
         'six',
-        'wheel',
         'appdirs',
         'xmodem',
         'pyserial',
         'progress',
+    ],
+    setup_requires=[
+        'setuptools_scm',
     ],
     extras_require={
         'docs': ['sphinx',
                  'sphinx-argparse',
                  'sphinxcontrib-documentedlist',
                  'sphinx-rtd-theme'],
+        'build': ['doit',
+                  'setuptools_scm',
+                  'wheel',
+                  'twine']
     },
     platforms='any',
     entry_points={

@@ -1,3 +1,3 @@
 
-from pkgutil import extend_path
-__path__ = extend_path(__path__, 'pysamloader')
+from pkg_resources import get_distribution
+__version__ = get_distribution('pysamloader').version
