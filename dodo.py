@@ -107,15 +107,14 @@ def _create_binary_package():
         return tarinfo
 
     if platform.system() == 'Linux':
+        print("Create Tarfile {0}".format(_binary_package_path()), file=sys.stderr)
         with tarfile.open(_binary_package_path(), "w:gz") as tar:
-        print("Create Tarfile {0}".format(_package_path()), file=sys.stderr)
-        with tarfile.open(_package_path(), "w:gz") as tar:
             for item, arc in package_content:
                 print("Adding {0}".format(item), file=sys.stderr)
                 tar.add(item, arcname=arc, filter=_filter_py)
     elif platform.system() == 'Windows':
-        print("Create Zipfile {0}".format(_package_path()), file=sys.stderr)
-        with zipfile.ZipFile(_package_path(), "w") as zfile:
+        print("Create Zipfile {0}".format(_binary_package_path()), file=sys.stderr)
+        with zipfile.ZipFile(_binary_package_path(), "w") as zfile:
             for item, arc in package_content:
                 if os.path.isfile(item):
                     print("Adding {0}".format(item), file=sys.stderr)
@@ -140,7 +139,7 @@ def task_package_binary():
 def task_publish_binary():
     return {
         'actions': [],
-        'file_deps': [_binary_package_path()],
+        'file_dep': [_binary_package_path()],
     }
 
 
