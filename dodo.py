@@ -25,11 +25,13 @@ if platform.system() == 'Linux':
     package_ext = '.tar.gz'
     executable_ext = ''
     pyi_prefix = "LD_LIBRARY_PATH={0} ".format(_get_python_shared_lib())
+    publish_pypi = True
 elif platform.system() == 'Windows':
     import zipfile
     package_ext = '.zip'
     executable_ext = '.exe'
     pyi_prefix = ""
+    publish_pypi = False
 else:
     raise NotImplementedError("Platform not supported : {0}"
                               "".format(platform.system()))
@@ -59,7 +61,8 @@ def _executable_path():
 def _binary_package_name():
     return "{0}-{1}-{2}-{3}{4}".format(
         SCRIPT_NAME, SCRIPT_VERSION,
-        platform.system().lower(), platform.machine(), package_ext
+        platform.system().lower(), platform.machine().lower(), 
+        package_ext
     )
 
 
@@ -105,10 +108,25 @@ def _create_binary_package():
 
     if platform.system() == 'Linux':
         with tarfile.open(_binary_package_path(), "w:gz") as tar:
+        print("Create Tarfile {0}".format(_package_path()), file=sys.stderr)
+        with tarfile.open(_package_path(), "w:gz") as tar:
             for item, arc in package_content:
+                print("Adding {0}".format(item), file=sys.stderr)
                 tar.add(item, arcname=arc, filter=_filter_py)
     elif platform.system() == 'Windows':
-        pass
+        print("Create Zipfile {0}".format(_package_path()), file=sys.stderr)
+        with zipfile.ZipFile(_package_path(), "w") as zfile:
+            for item, arc in package_content:
+                if os.path.isfile(item):
+                    print("Adding {0}".format(item), file=sys.stderr)
+                    zfile.write(item, arcname=arc)
+                else:
+                    print("Entering {0}".format(item), file=sys.stderr)
+                    for f in os.listdir(item):
+                        fullpath = os.path.join(item, f)
+                        if os.path.isfile(fullpath):
+                            print("Adding {0}".format(fullpath), file=sys.stderr)
+                            zfile.write(fullpath, arcname=os.path.join(arc, f))
 
 
 def task_package_binary():
@@ -137,7 +155,7 @@ def task_build_pypi():
 
 
 def task_publish_pypi():
-    if 'dev' in SCRIPT_VERSION:
+    if 'dev' in SCRIPT_VERSION or not publish_pypi:
         return {
             'actions': []
         }
