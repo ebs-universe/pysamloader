@@ -89,10 +89,12 @@ def _clean_stale_version():
     if os.path.exists(version_stub):
         os.remove(version_stub)
 
+
 def _inject_version():
     # Build version file for injection into the binary
     with open(os.path.join(_base_folder(), SCRIPT_NAME, '_version.py'), 'w') as f:
-	    f.write('__version__ = "{0}"'.format(SCRIPT_VERSION))
+        f.write('__version__ = "{0}"'.format(SCRIPT_VERSION))
+
 
 def task_prep_version():
     return {
@@ -101,6 +103,7 @@ def task_prep_version():
             _inject_version
         ]
     }
+
 
 def task_build_binary():
     return {
