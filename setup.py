@@ -17,8 +17,8 @@ setup(
     use_scm_version={"root": ".", "relative_to": __file__},
     author="Chintalagiri Shashank",
     author_email="shashank@chintal.in",
-    description="primitive python script for writing flash "
-                "on Atmel's ARM chips via SAM-BA.",
+    description="python library for writing flash on "
+                "Atmel's ARM chips via SAM-BA.",
     license="GPLv3+",
     keywords="utilities",
     url="https://github.com/chintal/pysamloader",

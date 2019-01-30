@@ -104,15 +104,18 @@ obtained on the command line with ``pysamloader --help``.
     :prog: pysamloader
     :nodefault:
 
+Links & Other Information
+-------------------------
+
 Known Issues
-------------
+............
 
  - Writing to multiple flash planes is not currently supported. This
    application will always write to the first flash plane and will start at
    the beginning.
 
 Future Directions
------------------
+.................
 
  - Add support for ``libftdi``/``libd2xx``/``libusb`` based backend for cases
    where the device disables ``ftdi_sio`` for its normal operation.
@@ -124,7 +127,7 @@ Future Directions
  - Add read capability for chip signature and/or silicon serial number.
 
 Links
------
+.....
 
 The latest version of the documentation, including installation, usage, and
 API/developer notes can be found at

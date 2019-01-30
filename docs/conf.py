@@ -145,6 +145,7 @@ latex_elements = {
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
+    'extraclassoptions': 'openany',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -155,6 +156,10 @@ latex_documents = [
      u'Chintalagiri Shashank', 'manual'),
 ]
 
+latex_logo = '_static/logo.png'
+latex_domain_indices = False
+latex_toplevel_sectioning = 'chapter'
+latex_show_urls = 'footnote'
 
 # -- Options for manual page output ---------------------------------------
 
