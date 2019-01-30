@@ -7,7 +7,14 @@ import shutil
 import platform
 
 from doit.task import clean_targets
+from doit.tools import create_folder
+from doit.action import CmdAction
 from setuptools_scm import get_version
+
+DOIT_CONFIG = {
+    'default_tasks': ['build',
+                      'package_binary'],
+}
 
 # Application Information
 # -----------------------
@@ -27,6 +34,7 @@ def _get_python_shared_lib():
         os.path.join(os.path.split(real_exec)[0], os.pardir, 'lib')
     )
 
+
 if six.PY2:
     pytag = 'py2'
 elif six.PY3:
@@ -40,12 +48,16 @@ if platform.system() == 'Linux':
     executable_ext = ''
     pyi_prefix = "LD_LIBRARY_PATH={0} ".format(_get_python_shared_lib())
     publish_pypi = True
+    doc_build_actions = [CmdAction('make latexpdf', cwd='docs')]
+    doc_clean_actions = [CmdAction('make clean', cwd='docs')]
 elif platform.system() == 'Windows':
     import zipfile
     package_ext = '.zip'
     executable_ext = '.exe'
     pyi_prefix = ""
     publish_pypi = False
+    doc_build_actions = []
+    doc_clean_actions = []
 else:
     raise NotImplementedError("Platform not supported : {0}"
                               "".format(platform.system()))
@@ -67,6 +79,8 @@ _binary_package_path = os.path.join(_binary_dist_folder, _binary_package_name)
 _sdist_name = '{0}-{1}.tar.gz'.format(SCRIPT_NAME, SCRIPT_VERSION)
 _bdist_name = '{0}-{1}-{2}-none-any.whl'.format(SCRIPT_NAME, SCRIPT_VERSION, pytag)
 _egg_info_folder = os.path.join(_base_folder, "{0}.egg-info".format(SCRIPT_NAME))
+_doc_name = SCRIPT_NAME + '.pdf'
+_doc_path = os.path.join(_base_folder, 'docs', '_build', 'latex', _doc_name)
 
 
 # Build Steps
@@ -86,7 +100,10 @@ def _clean_work_folder():
 
 def task_setup_build():
     return {
-        'actions': [_inject_version],
+        'actions': [
+            _inject_version,
+            (create_folder, [_dist_folder, _work_folder]),
+        ],
         'targets': [
             os.path.join(_base_folder, SCRIPT_NAME, '_version.py'),
             _dist_folder,
@@ -95,11 +112,19 @@ def task_setup_build():
     }
 
 
+def task_build_doc():
+    return {
+        'actions': doc_build_actions,
+        'targets': [_doc_path],
+        'clean': doc_clean_actions,
+        'task_dep': ['setup_build']
+    }
+
+
 def task_build_binary():
     return {
         'actions': [pyi_prefix + 'pyinstaller {0}.spec'.format(SCRIPT_NAME)],
-        'targets': [_executable_path, 
-                    _binary_dist_folder],
+        'targets': [_executable_path, _binary_dist_folder],
         'task_dep': ['setup_build'],
         'clean': True
     }
@@ -109,7 +134,7 @@ def _create_binary_package():
     package_content = [
         (os.path.join(_binary_dist_folder, _executable_name), _executable_name),
         (os.path.join(_base_folder, 'LICENSE'), 'LICENSE'),
-        (os.path.join(_base_folder, 'README.rst'), 'README.rst'),
+        (_doc_path, _doc_name),
         (os.path.join(_base_folder, 'pysamloader', 'devices'), 'devices'),
     ]
 
@@ -144,7 +169,7 @@ def _create_binary_package():
 
 def task_package_binary():
     return {
-        'task_dep': ['build_binary'],
+        'task_dep': ['build_binary', 'build_doc'],
         'actions': [_create_binary_package],
         'targets': [_binary_package_path],
         'clean': True
@@ -179,9 +204,7 @@ def task_build_pypi():
 
 def task_publish_pypi():
     if 'dev' in SCRIPT_VERSION or not publish_pypi:
-        return {
-            'actions': []
-        }
+        return {'actions': []}
     return {
         'file_dep': [
             os.path.join(_dist_folder, _sdist_name),
@@ -198,7 +221,8 @@ def task_build():
         'actions': [],
         'task_dep': [
             'build_binary',
-            'build_pypi'
+            'build_pypi',
+            'build_doc'
         ],
     }
 
