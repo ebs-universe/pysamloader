@@ -27,7 +27,7 @@ Currently supported devices are :
 
 .. documentedlist::
     :listobject: pysamloader.pysamloader.supported_devices
-    :header: "Device" "Interface" "Support Module"
+    :header: "Device" "Interface"
 
 Requirements & Installation
 ---------------------------

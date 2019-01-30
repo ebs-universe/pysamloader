@@ -26,7 +26,7 @@ import appdirs
 from xmodem import XMODEM
 from binascii import hexlify
 from six import PY2
-from six import StringIO
+from io import BytesIO
 
 from .samba import SamBAConnection
 
@@ -57,7 +57,7 @@ def raw_write_page(samba, page_address, data):
 def xm_write_page(samba, page_address, data):
     adrstr = hex(page_address)[2:].zfill(8)
     samba.xm_init_sf(adrstr)
-    sendbuf = StringIO(data)
+    sendbuf = BytesIO(data)
     modem = XMODEM(samba.xm_getc, samba.xm_putc)
     modem.send(sendbuf, quiet=True)
     sendbuf.close()
@@ -171,11 +171,13 @@ def set_boot(samba, device):
 
 
 def write_and_verify(args, progress_class=None):
-    samba = SamBAConnection(port=args.port, baud=args.baud, device=args.device)
-    if args.c is False:
+    samba = SamBAConnection(port=args.P, baud=args.b, device=args.device)
+    if not args.nw:
         raw_sendf(samba, args.device, args.filename,
                   progress_class=progress_class)
-    verify(samba, args.device, args.filename, progress_class=progress_class)
+    if not args.nv:
+        verify(samba, args.device, args.filename,
+               progress_class=progress_class)
     if args.g:
         set_boot(samba, args.device)
     else:
@@ -229,9 +231,8 @@ def get_supported_devices():
         name, ext = os.path.splitext(candidate)
         if ext == '.py':
             try:
-                dev_mod = get_device(name)
-                _supported_devices.append((name, "SAM-BA UART",
-                                           "{0}.{1}".format(dev_mod.__name__, name)))
+                _ = get_device(name)
+                _supported_devices.append((name, "SAM-BA UART"))
             except ImportError:
                 continue
     return _supported_devices

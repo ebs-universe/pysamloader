@@ -21,7 +21,6 @@ import logging
 import sys
 from time import sleep
 from serial import Serial
-from binascii import hexlify
 
 from .samdevice import SAMDevice
 
@@ -183,21 +182,21 @@ class SamBAConnection(object):
         msg = "S{0},#".format(address)
         logger.debug("Starting send file with command : {0}".format(msg))
         self.write_message(msg)
-        char = ''
-        while char is not 'C':
-            logger.info("Waiting for CRC")
-            char = self.ser.read(1).decode()
+        # char = ''
+        # while char is not 'C':
+        #     logger.info("Waiting for CRC")
+        #     char = self.ser.read(1).decode()
         return
 
     def xm_init_rf(self, address, size):
         """ Initialize XMODEM file read from specified address """
         pass
 
-    def xm_getc(self, size):
+    def xm_getc(self, size, timeout=1):
         """ getc function for the xmodem protocol """
         return self.ser.read(size).decode()
 
-    def xm_putc(self, data):
+    def xm_putc(self, data, timeout=1):
         """ putc function for the xmodem protocol """
         self.ser.write(data.encode())
         return len(data)

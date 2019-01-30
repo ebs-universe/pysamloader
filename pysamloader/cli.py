@@ -50,30 +50,32 @@ def print_serial_ports():
 def _get_parser():
     parser = argparse.ArgumentParser(
         description="Write an Atmel SAM chip's Flash using SAM-BA over UART")
-    parser.add_argument('-g', action='store_true',
-                        help="Set GPNVM bit when done writing. Needed to "
-                             "switch device boot from SAM-BA ROM to Flash "
-                             "program")
-    parser.add_argument('-V', action='store_true',
-                        help="Show version information and exit")
     parser.add_argument('-v', action='store_true',
                         help="Verbose debug information")
-    parser.add_argument('-c', action='store_true',
-                        help="Verify Only. Do not write.")
-    parser.add_argument('filename', metavar='file', nargs='?',
-                        help="Binary file to be burnt into the chip")
-    parser.add_argument('--port', metavar='port', default="/dev/ttyUSB1",
-                        help="Port on which SAM-BA is listening. "
-                             "Default /dev/ttyUSB1")
-    parser.add_argument('--baud', metavar='baud', type=int, default=115200,
-                        help="Baud rate of serial communication. "
-                             "Default 115200")
-    parser.add_argument('-d', '--device', metavar='device',
-                        help="ARM Device. Default ATSAM3U4E")
+    parser.add_argument('-V', action='store_true',
+                        help="Show version information and exit")
     parser.add_argument('--lp', '--list-ports', action='store_true',
                         help="List available serial ports and exit")
     parser.add_argument('--ld', '--list-devices', action='store_true',
                         help="List supported devices and exit")
+    parser.add_argument('-g', action='store_true',
+                        help="Set GPNVM bit when done writing. Needed to "
+                             "switch device boot from SAM-BA ROM to Flash "
+                             "program")
+    parser.add_argument('--nv', '--no-verify', action='store_true',
+                        help="Do not verify after write.")
+    parser.add_argument('--nw', '--no-write', action='store_true',
+                        help="Do not write only. Verify only.")
+    parser.add_argument('filename', metavar='file', nargs='?',
+                        help="Binary file to be burnt into the chip")
+    parser.add_argument('-P', '--port', metavar='port', default="/dev/ttyUSB1",
+                        help="Port on which SAM-BA is listening. "
+                             "Default /dev/ttyUSB1")
+    parser.add_argument('-b', '--baud', metavar='baud', type=int, default=115200,
+                        help="Baud rate of serial communication. "
+                             "Default 115200")
+    parser.add_argument('-d', '--device', metavar='device',
+                        help="ARM Device. Default ATSAM3U4E")
     return parser
 
 
