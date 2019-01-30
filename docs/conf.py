@@ -146,6 +146,7 @@ latex_elements = {
     #
     # 'figure_align': 'htbp',
     'extraclassoptions': 'openany',
+    'printindex': r'\footnotesize\raggedright\printindex',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
