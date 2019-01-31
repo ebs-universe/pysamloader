@@ -208,13 +208,13 @@ def _get_github_release(repo, v):
         release = repo.create_git_release(tag.name, v, "{0} Release".format(v))
     except FileNotFoundError:
         raise Exception("Cannot publish binary package. "
-                        "Create and push github tag first!")
+                        "Create and push github tag for {0} first!".format(v))
 
 
 def _publish_binary_package():
     g = github.Github(release_token)
     repo = g.get_repo(GITHUB_PATH)
-    release = _get_github_release(repo, SCRIPT_VERSION)
+    release = _get_github_release(repo, "v{0}".format(SCRIPT_VERSION))
     release.upload_asset(
         _binary_package_path, content_type=package_content_type,
         label = "{0} Binary Package".format(platform.system())
