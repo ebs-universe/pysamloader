@@ -13,3 +13,4 @@ pysamloader/_version.py
 .vs/
 .vscode/
 *__pycache__
+/.release_token

@@ -51,7 +51,8 @@ setup(
         'build': ['doit',
                   'setuptools_scm',
                   'wheel',
-                  'twine']
+                  'twine',
+                  'pygithub']
     },
     platforms='any',
     entry_points={

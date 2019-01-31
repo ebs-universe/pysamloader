@@ -4,6 +4,7 @@ import os
 import sys
 import six
 import shutil
+import github
 import platform
 
 from doit.task import clean_targets
@@ -21,7 +22,7 @@ DOIT_CONFIG = {
 
 SCRIPT_NAME = 'pysamloader'
 SCRIPT_VERSION = get_version(root='.', relative_to=__file__)
-
+GITHUB_PATH = 'chintal/{0}'.format(SCRIPT_NAME)
 
 # Platform and Build Environment Information
 # ------------------------------------------
@@ -45,6 +46,7 @@ else:
 if platform.system() == 'Linux':
     import tarfile
     package_ext = '.tar.gz'
+    package_content_type = 'application/gzip'
     executable_ext = ''
     pyi_prefix = "LD_LIBRARY_PATH={0} ".format(_get_python_shared_lib())
     publish_pypi = True
@@ -53,14 +55,19 @@ if platform.system() == 'Linux':
 elif platform.system() == 'Windows':
     import zipfile
     package_ext = '.zip'
+    package_content_type = 'application/zip'
     executable_ext = '.exe'
     pyi_prefix = ""
     publish_pypi = False
-    doc_build_actions = []
+    doc_build_actions = [CmdAction('make.bat latex', cwd='docs')]
     doc_clean_actions = []
 else:
     raise NotImplementedError("Platform not supported : {0}"
                               "".format(platform.system()))
+
+with open('.release_token', 'r') as f:
+    release_token = f.read().strip()
+
 
 # Names and Paths
 # ---------------
@@ -102,7 +109,8 @@ def task_setup_build():
     return {
         'actions': [
             _inject_version,
-            (create_folder, [_dist_folder, _work_folder]),
+            (create_folder, [_dist_folder]),
+            (create_folder, [_work_folder])
         ],
         'targets': [
             os.path.join(_base_folder, SCRIPT_NAME, '_version.py'),
@@ -176,9 +184,45 @@ def task_package_binary():
     }
 
 
+def _get_github_tag(repo, v):
+    found_tags = repo.get_tags()
+    for tag in found_tags:
+        if tag.name == v:
+            print("Found tag : {0}".format(tag), file=sys.stderr)
+            return tag
+    raise FileNotFoundError
+
+
+def _get_github_release(repo, v):
+    found_releases = repo.get_releases()
+    for release in found_releases:
+        if release.tag_name == v:
+            print("Found GitHub Release : {0}".format(release), file=sys.stderr)
+            return release
+    try:
+        tag = _get_github_tag(repo, v)
+        print("Creating GitHub Release : {0}".format(v), file=sys.stderr)
+        release = repo.create_git_release(tag.name, v, "{0} Release".format(v))
+    except FileNotFoundError:
+        raise Exception("Cannot publish binary package. "
+                        "Create and push github tag first!")
+
+
+def _publish_binary_package():
+    g = github.Github(release_token)
+    repo = g.get_repo(GITHUB_PATH)
+    release = _get_github_release(repo, SCRIPT_VERSION)
+    release.upload_asset(
+        _binary_package_path, content_type=package_content_type,
+        label = "{0} Binary Package".format(platform.system())
+    )
+
+
 def task_publish_binary():
+    if 'dev' in SCRIPT_VERSION:
+        return {'actions': []}
     return {
-        'actions': [],
+        'actions': [_publish_binary_package],
         'file_dep': [_binary_package_path],
     }
 
