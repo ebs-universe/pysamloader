@@ -205,7 +205,7 @@ def _get_github_release(repo, v):
     try:
         tag = _get_github_tag(repo, v)
         print("Creating GitHub Release : {0}".format(v), file=sys.stderr)
-        release = repo.create_git_release(tag.name, v, "{0} Release".format(v))
+        return repo.create_git_release(tag.name, v, "{0} Release".format(v))
     except FileNotFoundError:
         raise Exception("Cannot publish binary package. "
                         "Create and push github tag for {0} first!".format(v))
