@@ -270,6 +270,15 @@ def task_build():
         ],
     }
 
+def task_package():
+    return {
+        'actions': [],
+        'task_dep': [
+            'build_pypi',
+            'package_binary'
+        ],
+    }
+
 
 def task_publish():
     return {
