@@ -59,8 +59,11 @@ elif platform.system() == 'Windows':
     executable_ext = '.exe'
     pyi_prefix = ""
     publish_pypi = False
-    doc_build_actions = [CmdAction('make.bat latex', cwd='docs')]
-    doc_clean_actions = []
+    doc_build_actions = [
+        CmdAction('make.bat latex', cwd='docs'),
+        CmdAction('make.bat', cwd=os.path.join('docs', '_build', 'latex'))
+    ]
+    doc_clean_actions = [CmdAction('make clean', cwd='docs')]
 else:
     raise NotImplementedError("Platform not supported : {0}"
                               "".format(platform.system()))
