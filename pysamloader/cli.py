@@ -28,6 +28,9 @@ from .terminal import ProgressBar
 from .pysamloader import get_device
 from .pysamloader import get_supported_devices
 from .pysamloader import write_and_verify
+from .pysamloader import read_chipid
+from .pysamloader import read_flash_descriptors
+from .pysamloader import read_unique_identifier
 from . import __version__
 
 logger = logging.getLogger('cli')
@@ -47,35 +50,58 @@ def print_serial_ports():
                         str(p.product), str(p.serial_number)))
 
 
+def print_chipid(*args, **kwargs):
+    chipid = read_chipid(*args, **kwargs)
+    print(chipid)
+
+
+def print_flash_descriptors(*args, **kwargs):
+    descriptors = read_flash_descriptors(*args, **kwargs)
+    print(descriptors)
+
+
+def print_unique_identifier(*args, **kwargs):
+    uid = read_unique_identifier(*args, **kwargs)
+    print(uid)
+
+
 def _get_parser():
     parser = argparse.ArgumentParser(
         description="Write an Atmel SAM chip's Flash using SAM-BA over UART")
+
     parser.add_argument('-v', action='store_true',
                         help="Verbose debug information")
-    parser.add_argument('-V', action='store_true',
+    parser.add_argument('-P', '--port', metavar='port', default="/dev/ttyUSB1",
+                        help="Port on which SAM-BA is listening. Default /dev/ttyUSB1"),
+    parser.add_argument('-b', '--baud', metavar='baud', type=int, default=115200,
+                        help="Baud rate of serial communication. Default 115200"),
+    parser.add_argument('-d', '--device', metavar='device',
+                        help="Atmel SAM Device. Default ATSAM3U4E")
+
+    action = parser.add_mutually_exclusive_group(required=False)
+    action.add_argument('-V', action='store_true',
                         help="Show version information and exit")
-    parser.add_argument('--lp', '--list-ports', action='store_true',
+    action.add_argument('--lp', '--list-ports', action='store_true',
                         help="List available serial ports and exit")
-    parser.add_argument('--ld', '--list-devices', action='store_true',
+    action.add_argument('--ld', '--list-devices', action='store_true',
                         help="List supported devices and exit")
-    parser.add_argument('-g', action='store_true',
-                        help="Set GPNVM bit when done writing. Needed to "
-                             "switch device boot from SAM-BA ROM to Flash "
-                             "program")
+    action.add_argument('--rc', '--read-chipid', action='store_true',
+                        help="Read Chip ID and exit")
+    action.add_argument('--rd', '--read-descriptor', action='store_true',
+                        help="Read flash descriptors and exit")
+    action.add_argument('--ri', '--read-identifier', action='store_true',
+                        help="Read unique identifier and exit")
+
+    parser.add_argument('-g', action='store_true', help="Set GPNVM bit(s) "
+                        "to switch device boot from SAM-BA ROM to Flash. If "
+                        "provided with a file to write, will be set after "
+                        "successful write/verify.")
     parser.add_argument('--nv', '--no-verify', action='store_true',
                         help="Do not verify after write.")
     parser.add_argument('--nw', '--no-write', action='store_true',
                         help="Do not write only. Verify only.")
     parser.add_argument('filename', metavar='file', nargs='?',
                         help="Binary file to be burnt into the chip")
-    parser.add_argument('-P', '--port', metavar='port', default="/dev/ttyUSB1",
-                        help="Port on which SAM-BA is listening. "
-                             "Default /dev/ttyUSB1")
-    parser.add_argument('-b', '--baud', metavar='baud', type=int, default=115200,
-                        help="Baud rate of serial communication. "
-                             "Default 115200")
-    parser.add_argument('-d', '--device', metavar='device',
-                        help="ARM Device. Default ATSAM3U4E")
     return parser
 
 
@@ -102,11 +128,6 @@ def main():
     if arguments.ld:
         return print_supported_devices()
 
-    if not arguments.filename:
-        print("No bin file provided and no list actions requested.")
-        parser.print_help()
-        return
-
     if not arguments.device:
         logger.info("Device not specified. Assuming ATSAM3U4E.")
         arguments.device = 'ATSAM3U4E'
@@ -120,6 +141,30 @@ def main():
         print_supported_devices()
 
     arguments.device = dev
+
+    if arguments.rc:
+        return print_chipid(port=arguments.port,
+                            baud=arguments.baud,
+                            device=arguments.device)
+
+    if arguments.rd:
+        return print_flash_descriptors(port=arguments.port,
+                                       baud=arguments.baud,
+                                       device=arguments.device)
+
+    if arguments.ri:
+        return print_unique_identifier(port=arguments.port,
+                                       baud=arguments.baud,
+                                       device=arguments.device)
+
+    if arguments.g and not arguments.filename:
+        pass
+
+    if not arguments.filename:
+        print("No bin file provided and no list actions requested.")
+        parser.print_help()
+        return
+
     write_and_verify(arguments, progress_class=ProgressBar)
 
 
