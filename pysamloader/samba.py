@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright (c) 2012-2019 Chintalagiri Shashank
 #
 # This file is part of pysamloader.
@@ -23,6 +21,9 @@ from time import sleep
 from serial import Serial
 
 from .samdevice import SAMDevice
+from .chipid import SamChipID
+from .efcdescriptor import EFCFlashDescriptor
+
 
 logger = logging.getLogger('samba')
 
@@ -182,10 +183,7 @@ class SamBAConnection(object):
         msg = "S{0},#".format(address)
         logger.debug("Starting send file with command : {0}".format(msg))
         self.write_message(msg)
-        # char = ''
-        # while char is not 'C':
-        #     logger.info("Waiting for CRC")
-        #     char = self.ser.read(1).decode()
+        _ = self.ser.read(2)
         return
 
     def xm_init_rf(self, address, size):
@@ -194,11 +192,14 @@ class SamBAConnection(object):
 
     def xm_getc(self, size, timeout=1):
         """ getc function for the xmodem protocol """
-        return self.ser.read(size).decode()
+        data = self.ser.read(size)
+        logger.debug("XM_RESP [{0:>3}] : {1}".format(len(data), data))
+        return data
 
     def xm_putc(self, data, timeout=1):
         """ putc function for the xmodem protocol """
-        self.ser.write(data.encode())
+        logger.debug("XM_SEND [{0:>3}] : {1}".format(len(data), data))
+        self.ser.write(data)
         return len(data)
 
     def efc_wready(self):
@@ -209,6 +210,9 @@ class SamBAConnection(object):
             sleep(0.01)
             status = self.efc_rstat()
         return
+
+    def efc_readfrr(self):
+        return self.read_word(self._device.EFC_FRR)
 
     def efc_ewp(self, pno):
         """ EFC trigger write page. Pno is an integer """
@@ -263,3 +267,29 @@ class SamBAConnection(object):
         self.write_word(self._device.EFC_FCR,
                         '5A0000{0}'.format(self._device.EAC))
         self.efc_wready()
+
+    def getchipid(self):
+        cidr = self.read_word(self._device.CHIPID_CIDR).strip()
+        exid = self.read_word(self._device.CHIPID_EXID).strip()
+        return SamChipID(cidr, exid)
+
+    def efc_getflashdescriptor(self):
+        self.efc_wready()
+        self.write_word(self._device.EFC_FCR,
+                        '5A0000{0}'.format(self._device.GD_CMD))
+        self.efc_wready()
+        return EFCFlashDescriptor(self)
+
+    def efc_getuid(self):
+        self.efc_wready()
+        self.write_word(self._device.EFC_FCR,
+                        '5A0000{0}'.format(self._device.STUI_CMD))
+
+        uid = ""
+        for i in range(4):
+            uid += self.read_word(hex(0x80000 + i * 4)[2:]).strip()[2:]
+
+        self.write_word(self._device.EFC_FCR,
+                        '5A0000{0}'.format(self._device.SPUI_CMD))
+        self.efc_wready()
+        return uid

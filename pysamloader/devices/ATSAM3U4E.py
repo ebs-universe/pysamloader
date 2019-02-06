@@ -22,6 +22,9 @@ from pysamloader.samdevice import SAMDevice
 class ATSAM3U4E(SAMDevice):
     EFC_FCR = '400E0804'
     EFC_FSR = '400E0808'
+    EFC_FRR = '400E080C'
+    CHIPID_CIDR = '400E0740'
+    CHIPID_EXID = '400E0744'
     AutoBaud = False
     FullErase = False
     WP_COMMAND = None
@@ -31,6 +34,9 @@ class ATSAM3U4E(SAMDevice):
     PAGE_SIZE = 256
     SGPB_CMD = '0B'
     CGPB_CMD = '0C'
+    GD_CMD = '00'
+    STUI_CMD = '0E'
+    SPUI_CMD = '0F'
     SGP = [0, 1, 0]
 
     def __init__(self):

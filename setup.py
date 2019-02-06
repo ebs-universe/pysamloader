@@ -39,6 +39,7 @@ setup(
         'xmodem',
         'pyserial',
         'progress',
+        'bitstring',
     ],
     setup_requires=[
         'setuptools_scm',

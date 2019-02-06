@@ -59,7 +59,8 @@ def xm_write_page(samba, page_address, data):
     samba.xm_init_sf(adrstr)
     sendbuf = BytesIO(data)
     modem = XMODEM(samba.xm_getc, samba.xm_putc)
-    modem.send(sendbuf, quiet=True)
+    if not modem.send(sendbuf, quiet=True):
+        raise IOError("XMODEM Transfer Failure")
     sendbuf.close()
 
 
@@ -80,7 +81,6 @@ def _page_writer(_writer, samba, device, page_address, bin_file):
                 padding = bytes("\255".encode())
             data += padding * (device.PAGE_SIZE - len(data))
         status = 0
-    logger.debug(len(data))
     logger.debug('Sending file chunk : \n {0}CEND'.format(hexlify(data)))
     _writer(samba, page_address, data)
     return status
@@ -171,18 +171,34 @@ def set_boot(samba, device):
 
 
 def write_and_verify(args, progress_class=None):
-    samba = SamBAConnection(port=args.P, baud=args.b, device=args.device)
+    samba = SamBAConnection(port=args.port, baud=args.baud, device=args.device)
     if not args.nw:
-        raw_sendf(samba, args.device, args.filename,
-                  progress_class=progress_class)
+        xmodem_sendf(samba, args.device, args.filename,
+                     progress_class=progress_class)
+    errors = None
     if not args.nv:
-        verify(samba, args.device, args.filename,
-               progress_class=progress_class)
-    if args.g:
+        errors = verify(samba, args.device, args.filename,
+                        progress_class=progress_class)
+    if not errors and args.g:
         set_boot(samba, args.device)
     else:
         logger.warning("Not setting GPNVM bit.")
         logger.warning("Invoke with -g to have that happen.")
+
+
+def read_chipid(*args, **kwargs):
+    samba = SamBAConnection(*args, **kwargs)
+    return samba.getchipid()
+
+
+def read_flash_descriptors(*args, **kwargs):
+    samba = SamBAConnection(*args, **kwargs)
+    return samba.efc_getflashdescriptor()
+
+
+def read_unique_identifier(*args, **kwargs):
+    samba = SamBAConnection(*args, **kwargs)
+    return samba.efc_getuid()
 
 
 def _get_device_folder():

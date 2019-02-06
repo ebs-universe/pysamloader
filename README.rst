@@ -29,6 +29,18 @@ Currently supported devices are :
     :listobject: pysamloader.pysamloader.supported_devices
     :header: "Device" "Interface"
 
+Features
+--------
+
+``pysamloader`` currently supports the following actions :
+
+    - Write device flash
+    - Optionally verify flash after writing
+    - Optionally set the GPNVM bits to boot from flash after writing
+    - Read and parse ChipID
+    - Read Unique Identifier from Embedded Flash
+    - Read Flash Descriptor
+
 Requirements & Installation
 ---------------------------
 
@@ -124,7 +136,6 @@ Future Directions
    signatures of device configuration, including VID, PID, Manufacturer,
    Product, Serial Number, and USB endpoint descriptors.
  - Add a clean and simple GUI.
- - Add read capability for chip signature and/or silicon serial number.
 
 Links
 .....
