@@ -27,6 +27,7 @@ GITHUB_PATH = 'chintal/{0}'.format(SCRIPT_NAME)
 # Platform and Build Environment Information
 # ------------------------------------------
 
+
 def _get_python_shared_lib():
     real_exec = sys.executable
     while os.path.islink(real_exec):
@@ -272,6 +273,7 @@ def task_build():
             'build_doc'
         ],
     }
+
 
 def task_package():
     return {
