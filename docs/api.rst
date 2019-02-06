@@ -11,3 +11,18 @@ Source Documentation
 ----------------
 
 .. automodule:: pysamloader.samba
+
+``chipid`` module
+-----------------
+
+.. automodule:: pysamloader.chipid
+
+``efcdescriptor`` module
+------------------------
+
+.. automodule:: pysamloader.efcdescriptor
+
+``samdevice`` module
+--------------------
+
+.. automodule:: pysamloader.samdevice
