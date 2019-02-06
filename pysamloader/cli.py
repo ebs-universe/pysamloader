@@ -31,6 +31,7 @@ from .pysamloader import write_and_verify
 from .pysamloader import read_chipid
 from .pysamloader import read_flash_descriptors
 from .pysamloader import read_unique_identifier
+from .pysamloader import set_boot_from_flash
 from . import __version__
 
 logger = logging.getLogger('cli')
@@ -158,7 +159,9 @@ def main():
                                        device=arguments.device)
 
     if arguments.g and not arguments.filename:
-        pass
+        return set_boot_from_flash(port=arguments.port,
+                                   baud=arguments.baud,
+                                   device=arguments.device)
 
     if not arguments.filename:
         print("No bin file provided and no list actions requested.")

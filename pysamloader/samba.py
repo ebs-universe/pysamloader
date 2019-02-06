@@ -214,6 +214,12 @@ class SamBAConnection(object):
     def efc_readfrr(self):
         return self.read_word(self._device.EFC_FRR)
 
+    def efc_readfmr(self):
+        return self.read_word(self._device.EFC_FMR)
+
+    def efc_setfmr(self, mode):
+        return self.write_word(self._device.EFC_FMR, mode)
+
     def efc_ewp(self, pno):
         """ EFC trigger write page. Pno is an integer """
         self.write_word(self._device.EFC_FCR,

@@ -125,6 +125,9 @@ Known Issues
  - Writing to multiple flash planes is not currently supported. This
    application will always write to the first flash plane and will start at
    the beginning.
+ - The use of xmodem send file to write flash doesn't seem to work. Flash is
+   instead written using SAM-BA ``write_word`` commands, which is about 20
+   times slower.
 
 Future Directions
 .................

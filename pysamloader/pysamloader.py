@@ -173,8 +173,16 @@ def set_boot(samba, device):
 def write_and_verify(args, progress_class=None):
     samba = SamBAConnection(port=args.port, baud=args.baud, device=args.device)
     if not args.nw:
-        xmodem_sendf(samba, args.device, args.filename,
-                     progress_class=progress_class)
+        enable_xmodem = False
+        if enable_xmodem:
+            # See device errata in 3U4E datasheet
+            original = samba.efc_readfmr().strip()[2:]
+            samba.efc_setfmr('00000600')
+            xmodem_sendf(samba, args.device, args.filename,
+                         progress_class=progress_class)
+        else:
+            raw_sendf(samba, args.device, args.filename,
+                      progress_class=progress_class)
     errors = None
     if not args.nv:
         errors = verify(samba, args.device, args.filename,
@@ -184,6 +192,11 @@ def write_and_verify(args, progress_class=None):
     else:
         logger.warning("Not setting GPNVM bit.")
         logger.warning("Invoke with -g to have that happen.")
+
+
+def set_boot_from_flash(*args, **kwargs):
+    samba = SamBAConnection(*args, **kwargs)
+    return set_boot(samba, kwargs['device'])
 
 
 def read_chipid(*args, **kwargs):

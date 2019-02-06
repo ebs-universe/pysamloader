@@ -20,6 +20,7 @@ from pysamloader.samdevice import SAMDevice
 
 
 class ATSAM3U4E(SAMDevice):
+    EFC_FMR = '400E0800'
     EFC_FCR = '400E0804'
     EFC_FSR = '400E0808'
     EFC_FRR = '400E080C'
