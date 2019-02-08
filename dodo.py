@@ -315,6 +315,7 @@ def task_publish():
         'actions': [],
         'task_dep': [
             'publish_binary',
-            'publish_pypi'
+            'publish_pypi',
+            'publish_installer'
         ]
     }
