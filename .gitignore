@@ -14,3 +14,5 @@ pysamloader/_version.py
 .vscode/
 *__pycache__
 /.release_token
+packaging/windows/*.exe
+packaging/windows/*.msi

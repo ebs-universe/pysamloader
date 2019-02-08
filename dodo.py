@@ -57,7 +57,9 @@ elif platform.system() == 'Windows':
     import zipfile
     package_ext = '.zip'
     package_content_type = 'application/zip'
+    installer_content_type = 'application/x-msi'
     executable_ext = '.exe'
+    installer_ext = '.msi'
     pyi_prefix = ""
     publish_pypi = False
     doc_build_actions = [
@@ -87,6 +89,10 @@ _binary_package_name = "{0}-{1}-{2}-{3}{4}".format(
     SCRIPT_NAME, SCRIPT_VERSION,
     platform.system().lower(), platform.machine().lower(), package_ext)
 _binary_package_path = os.path.join(_binary_dist_folder, _binary_package_name)
+_installer_name = "{0}-{1}-{2}{3}".format(SCRIPT_NAME, SCRIPT_VERSION, 
+                                          platform.machine().lower(), installer_ext)
+_installer_path = os.path.join(_base_folder, 'packaging', 
+                               platform.machine().lower(), _installer_name)
 _sdist_name = '{0}-{1}.tar.gz'.format(SCRIPT_NAME, SCRIPT_VERSION)
 _bdist_name = '{0}-{1}-{2}-none-any.whl'.format(SCRIPT_NAME, SCRIPT_VERSION, pytag)
 _egg_info_folder = os.path.join(_base_folder, "{0}.egg-info".format(SCRIPT_NAME))
@@ -228,6 +234,25 @@ def task_publish_binary():
     return {
         'actions': [_publish_binary_package],
         'file_dep': [_binary_package_path],
+    }
+
+
+def _publish_installer():
+    g = github.Github(release_token)
+    repo = g.get_repo(GITHUB_PATH)
+    release = _get_github_release(repo, "v{0}".format(SCRIPT_VERSION))
+    release.upload_asset(
+        _installer_path, content_type=installer_content_type,
+        label = "{0} Installer".format(platform.system())
+    )
+
+
+def task_publish_installer():
+    if 'dev' in SCRIPT_VERSION or not platform.system() == 'Windows':
+        return {'actions': []}
+    return {
+        'actions': [_publish_installer],
+        'file_dep': [_installer_path],
     }
 
 
