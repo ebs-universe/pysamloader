@@ -92,7 +92,7 @@ _binary_package_path = os.path.join(_binary_dist_folder, _binary_package_name)
 _installer_name = "{0}-{1}-{2}{3}".format(SCRIPT_NAME, SCRIPT_VERSION, 
                                           platform.machine().lower(), installer_ext)
 _installer_path = os.path.join(_base_folder, 'packaging', 
-                               platform.machine().lower(), _installer_name)
+                               platform.system().lower(), _installer_name)
 _sdist_name = '{0}-{1}.tar.gz'.format(SCRIPT_NAME, SCRIPT_VERSION)
 _bdist_name = '{0}-{1}-{2}-none-any.whl'.format(SCRIPT_NAME, SCRIPT_VERSION, pytag)
 _egg_info_folder = os.path.join(_base_folder, "{0}.egg-info".format(SCRIPT_NAME))
