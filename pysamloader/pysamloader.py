@@ -216,7 +216,7 @@ def read_unique_identifier(*args, **kwargs):
 
 def _get_device_folder():
     devices_folder_candidates = [
-        os.path.join(appdirs.user_config_dir('pysamloader'), 'devices'),
+        os.path.join(appdirs.user_config_dir('pysamloader', appauthor='Quazar Technologies', roaming=True), 'devices'),
         os.path.join(os.path.split(__file__)[0], 'devices')
     ]
     for candidate in devices_folder_candidates:

@@ -28,10 +28,12 @@
   <ItemGroup>
     <Compile Include="docs\conf.py" />
     <Compile Include="dodo.py" />
+    <Compile Include="pysamloader\chipid.py" />
     <Compile Include="pysamloader\cli.py" />
     <Compile Include="pysamloader\devices\AT91SAM7X512.py" />
     <Compile Include="pysamloader\devices\ATSAM3U4E.py" />
     <Compile Include="pysamloader\devices\__init__.py" />
+    <Compile Include="pysamloader\efcdescriptor.py" />
     <Compile Include="pysamloader\pysamloader.py" />
     <Compile Include="pysamloader\samba.py" />
     <Compile Include="pysamloader\samdevice.py" />

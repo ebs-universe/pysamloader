@@ -51,11 +51,8 @@ best tested on Linux followed by on Windows (10 and 7).
 support is likely to be removed in the near future.
 
 In general, ``pysamloader`` is expected to be pip-installed. It can be safely 
-installed into a virtualenv. There are no distro-specific packages or windows 
-installers available. 
-
-As long as you have a functioning python installation of sufficient version,
-installing ``pysamloader`` would be simply :
+installed into a virtualenv. As long as you have a functioning python 
+installation of sufficient version, installing ``pysamloader`` would be simply :
 
 .. code-block:: console
 
@@ -86,10 +83,9 @@ required if you are using the binary packages. The location is that provided
 by ``user_config_dir`` of the python ``appdirs`` package, specifically : 
 
     - Linux : ``~/.config/pysamloader``
-    - Windows : ``C:\Users\<username>\AppData\Local\pysamloader\pysamloader``
+    - Windows : ``C:\Users\<username>\AppData\Roaming\Quazar Technologies\pysamloader``
 
-If/when they are eventually created, ``pysamloader`` installers, aside from 
-the simple ``pip install pysamloader``, will likely create this folder and
+The current ``pysamloader`` windows .msi installer will create this folder and
 populate it as a part of the install process. 
 
 
