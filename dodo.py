@@ -48,7 +48,9 @@ if platform.system() == 'Linux':
     import tarfile
     package_ext = '.tar.gz'
     package_content_type = 'application/gzip'
+    installer_content_type = 'application/vnd.debian.binary-package'
     executable_ext = ''
+    installer_ext = '.deb'
     pyi_prefix = "LD_LIBRARY_PATH={0} ".format(_get_python_shared_lib())
     publish_pypi = True
     doc_build_actions = [CmdAction('make latexpdf', cwd='docs')]
