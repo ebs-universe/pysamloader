@@ -143,15 +143,28 @@ class SamChipID(object):
     def nvptyp(self):
         return self._defs_nvptyp[self._get_value(30, 28)]
 
+    fields = [
+        ('Version', 'version'),
+        ('Embedded Processor', 'eproc'),
+        ('Nonvolatile Program Size', 'nvpsiz'),
+        ('Second Nonvolatile Program Size', 'nvpsiz2'),
+        ('Internal SRAM Size', 'sramsiz'),
+        ('Architecture Identifier', 'arch'),
+        ('Nonvolatile Program Memory Type', 'nvptyp'),
+        ('CIDR', '_cidr'),
+        ('EXID', '_exid')
+    ]
+
     def __repr__(self):
         rstr = "Chip ID : \n"
-        rstr += "                        Version : {0}\n".format(self.version)
-        rstr += "             Embedded Processor : {0}\n".format(self.eproc[1])
-        rstr += "       Nonvolatile Program Size : {0}\n".format(self.nvpsiz[1])
-        rstr += "Second Nonvolatile Program Size : {0}\n".format(self.nvpsiz2[1])
-        rstr += "             Internal SRAM Size : {0}\n".format(self.sramsiz[1])
-        rstr += "        Architecture Identifier : {0}\n".format(self.arch[1])
-        rstr += "Nonvolatile Program Memory Type : {0}\n".format(self.nvptyp[1])
-        rstr += "                           CIDR : {0}\n".format(self._cidr)
-        rstr += "                           EXID : {0}".format(self._exid)
+        maxlen = 0
+        for tag, handle in self.fields:
+            if len(tag) > maxlen:
+                maxlen = len(tag)
+        fmt = "{0:>" + str(maxlen + 1) + "} : {1}\n"
+        for tag, handle in self.fields:
+            value = getattr(self, handle)
+            if isinstance(value, tuple):
+                value = value[1]
+            rstr += fmt.format(tag, value)
         return rstr
