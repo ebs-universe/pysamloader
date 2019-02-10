@@ -8,3 +8,5 @@ sphinxcontrib-documentedlist
 appdirs
 pygithub
 bitstring
+cython
+kivy

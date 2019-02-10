@@ -40,6 +40,8 @@ setup(
         'pyserial',
         'progress',
         'bitstring',
+        'cython',
+        'kivy'
     ],
     setup_requires=[
         'setuptools_scm',
@@ -57,6 +59,9 @@ setup(
     },
     platforms='any',
     entry_points={
-        'console_scripts': ['pysamloader=pysamloader.cli:main'],
+        'console_scripts': [
+            'pysamloader=pysamloader.cli:main',
+            'pysamloader-gui=pysamloader.gui.app:main',
+        ],
     }
 )

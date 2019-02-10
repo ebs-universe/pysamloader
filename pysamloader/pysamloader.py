@@ -94,7 +94,10 @@ def _file_writer(_writer, samba, device, filename,
     page_no = start_page
     bin_file = open(filename, "rb")
     num_pages = int((os.fstat(bin_file.fileno())[6] + 128) / 256)
-    p = progress_class(max=num_pages)
+    if progress_class:
+        p = progress_class(max=num_pages)
+    else:
+        p = None
 
     logger.info("Writing to Flash")
     while stat:
@@ -106,8 +109,10 @@ def _file_writer(_writer, samba, device, filename,
         samba.efc_ewp(page_no)
         logger.debug("Page done : {0}".format(page_no))
         page_no = page_no + 1
-        p.next(note="Page {0}/{1}".format(page_no, num_pages))
-    p.finish()
+        if p:
+            p.next(note="Page {0}/{1}".format(page_no, num_pages))
+    if p:
+        p.finish()
     logger.info("Writing to Flash Complete")
 
 
@@ -121,6 +126,21 @@ def raw_sendf(*args, **kwargs):
     return _file_writer(raw_write_page, *args, **kwargs)
 
 
+def write(samba, device, filename, progress_class=None):
+    if isinstance(device, str):
+        device = get_device(device)
+    enable_xmodem = False
+    if enable_xmodem:
+        # See device errata in 3U4E datasheet
+        original = samba.efc_readfmr().strip()[2:]
+        samba.efc_setfmr('00000600')
+        xmodem_sendf(samba, device, filename,
+                     progress_class=progress_class)
+    else:
+        raw_sendf(samba, device, filename,
+                  progress_class=progress_class)
+
+
 def verify(samba, device, filename, start_page=0, progress_class=None):
     """
     Verify the contents of flash against the contents of the file.
@@ -132,13 +152,17 @@ def verify(samba, device, filename, start_page=0, progress_class=None):
     address = int(device.FS_ADDRESS, 16) + (start_page * device.PAGE_SIZE)
     errors = 0
     byte_address = 0
-    p = progress_class(max=len_bytes/4)
+    if progress_class:
+        p = progress_class(max=len_bytes/4)
+    else:
+        p = None
     logger.info("Verifying Flash")
     reversed_word = bytearray(bin_file.read(4))
     word = reversed_word
     word.reverse()
     while reversed_word:
-        p.next(note="{0}/{1} Bytes".format(byte_address, len_bytes))
+        if p:
+            p.next(note="{0}/{1} Bytes".format(byte_address, len_bytes))
         actual = samba.read_word(hex(address)[2:].zfill(8)).strip()
         if PY2:
             expected = hexlify(word)
@@ -156,7 +180,8 @@ def verify(samba, device, filename, start_page=0, progress_class=None):
         word = reversed_word
         word.reverse()
         byte_address = byte_address + 4
-    p.finish()
+    if p:
+        p.finish()
     logger.info("Verification Complete. Words with Errors : " + str(errors))
     return errors
 
@@ -173,16 +198,7 @@ def set_boot(samba, device):
 def write_and_verify(args, progress_class=None):
     samba = SamBAConnection(port=args.port, baud=args.baud, device=args.device)
     if not args.nw:
-        enable_xmodem = False
-        if enable_xmodem:
-            # See device errata in 3U4E datasheet
-            original = samba.efc_readfmr().strip()[2:]
-            samba.efc_setfmr('00000600')
-            xmodem_sendf(samba, args.device, args.filename,
-                         progress_class=progress_class)
-        else:
-            raw_sendf(samba, args.device, args.filename,
-                      progress_class=progress_class)
+        write(samba, args.device, args.filename, progress_class=progress_class)
     errors = None
     if not args.nv:
         errors = verify(samba, args.device, args.filename,
@@ -195,7 +211,9 @@ def write_and_verify(args, progress_class=None):
 
 
 def set_boot_from_flash(*args, **kwargs):
-    samba = SamBAConnection(*args, **kwargs)
+    samba = kwargs.pop('samba', None)
+    if not samba:
+        samba = SamBAConnection(*args, **kwargs)
     return set_boot(samba, kwargs['device'])
 
 
