@@ -16,16 +16,21 @@
 # along with pysamloader.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import sys
 from time import sleep
 from serial import Serial
 
 from .samdevice import SAMDevice
 from .chipid import SamChipID
 from .efcdescriptor import EFCFlashDescriptor
-
+from . import log
 
 logger = logging.getLogger('samba')
+log.loggers.append(logger)
+
+
+class SamBAConnectionError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
 
 
 class SamBAConnection(object):
@@ -40,9 +45,8 @@ class SamBAConnection(object):
         try:
             self.ser.open()
         except:
-            logger.critical("Unable to open serial port.\
-                            \nCheck your connections and try again.")
-            sys.exit(1)
+            raise SamBAConnectionError("Unable to open serial port.\
+                                       \nCheck your connections and try again.")
         if not device:
             self._device = SAMDevice()
         else:
@@ -89,7 +93,7 @@ class SamBAConnection(object):
         if resp:
             return
         else:
-            raise Exception("SAM-BA did not respond to V#")
+            raise SamBAConnectionError("SAM-BA did not respond to V#")
 
     def flush_all(self):
         """ Flush serial communication buffers  """

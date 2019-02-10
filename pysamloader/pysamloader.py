@@ -29,6 +29,7 @@ from six import PY2
 from io import BytesIO
 
 from .samba import SamBAConnection
+from . import log
 
 if sys.version_info.major == 3 and sys.version_info.minor >= 5:
     import importlib.util
@@ -37,9 +38,8 @@ elif sys.version_info.major == 3 and 3 <= sys.version_info.minor <= 4:
 else:
     import imp
 
-
-logging.basicConfig(format='[%(levelname)8s][%(name)s] %(message)s')
 logger = logging.getLogger('pysamloader')
+log.loggers.append(logger)
 
 
 def raw_write_page(samba, page_address, data):
@@ -200,17 +200,23 @@ def set_boot_from_flash(*args, **kwargs):
 
 
 def read_chipid(*args, **kwargs):
-    samba = SamBAConnection(*args, **kwargs)
+    samba = kwargs.pop('samba', None)
+    if not samba:
+        samba = SamBAConnection(*args, **kwargs)
     return samba.getchipid()
 
 
 def read_flash_descriptors(*args, **kwargs):
-    samba = SamBAConnection(*args, **kwargs)
+    samba = kwargs.pop('samba', None)
+    if not samba:
+        samba = SamBAConnection(*args, **kwargs)
     return samba.efc_getflashdescriptor()
 
 
 def read_unique_identifier(*args, **kwargs):
-    samba = SamBAConnection(*args, **kwargs)
+    samba = kwargs.pop('samba', None)
+    if not samba:
+        samba = SamBAConnection(*args, **kwargs)
     return samba.efc_getuid()
 
 

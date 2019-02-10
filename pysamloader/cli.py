@@ -34,7 +34,9 @@ from .pysamloader import read_unique_identifier
 from .pysamloader import set_boot_from_flash
 from . import __version__
 
+from . import log
 logger = logging.getLogger('cli')
+log.loggers.append(logger)
 
 
 def print_supported_devices():
@@ -111,13 +113,9 @@ def main():
     arguments = parser.parse_args()
 
     if arguments.v:
-        logger.setLevel(logging.DEBUG)
-        logging.getLogger('pysamloader').setLevel(logging.DEBUG)
-        logging.getLogger('samba').setLevel(logging.DEBUG)
+        log.set_level(logging.DEBUG)
     else:
-        logger.setLevel(logging.INFO)
-        logging.getLogger('pysamloader').setLevel(logging.INFO)
-        logging.getLogger('samba').setLevel(logging.INFO)
+        log.set_level(logging.INFO)
 
     if arguments.V:
         print("pysamloader {0}".format(__version__))
