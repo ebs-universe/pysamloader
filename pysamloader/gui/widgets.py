@@ -248,7 +248,7 @@ class OptionCard(ColorBoxLayout):
         self.add_widget(self._info_label)
         if self._extended_info:
             self._extended_info_icon = ImageButton(
-                source='pysamloader/assets/info.png',
+                source=os.path.join(asset_path, 'info.png'),
                 size_hint_x=0.2)
             title, content = self._extended_info()
             dismissbutton = Button(text='OK', size_hint_y=0.2)
