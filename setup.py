@@ -63,5 +63,6 @@ setup(
             'pysamloader=pysamloader.cli:main',
             'pysamloader-gui=pysamloader.gui.app:main',
         ],
-    }
+    },
+    include_package_data=True,
 )

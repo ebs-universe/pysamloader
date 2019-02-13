@@ -2,7 +2,10 @@
 
 import os
 import re
+from datetime import datetime
+from datetime import timedelta
 from itertools import chain
+from progress import Progress
 
 from kivy.uix.button import Button
 from kivy.uix.image import Image
@@ -14,8 +17,10 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.filechooser import FileChooserListView
+from kivy.uix.progressbar import ProgressBar
 
 from kivy.app import App
+from kivy.clock import mainthread
 from kivy.core.window import Window
 from kivy.graphics import Color
 from kivy.graphics import Rectangle
@@ -26,7 +31,9 @@ from kivy.animation import Animation
 
 from kivy.graphics.opengl import glGetIntegerv
 from kivy.graphics.opengl import GL_MAX_TEXTURE_SIZE
+
 _image_max_size = glGetIntegerv(GL_MAX_TEXTURE_SIZE)[0]
+asset_path = os.path.normpath(os.path.join(os.path.split(__file__)[0], os.pardir, 'assets'))
 
 
 class BackgroundColorMixin(object):
@@ -217,10 +224,9 @@ class OptionCard(ColorBoxLayout):
 
     def __init__(self, **kwargs):
         _icon_source = kwargs.pop('icon')
-        _info_msg = kwargs.pop('info_msg')
+        self._info_msg = kwargs.pop('info_msg')
         self._extended_info = kwargs.pop('extended_info', None)
         self._icon = Image(source=_icon_source)
-        self._info_msg = _info_msg
         self._info_label = None
         self._extended_info_icon = None
         super(OptionCard, self).__init__(orientation='vertical', size_hint_y=0.37,
@@ -273,25 +279,24 @@ class SpinnerOptionCard(OptionCard):
 
 
 class FileOptionCard(OptionCard):
+    _default_location = os.path.expanduser('~')
+
     def __init__(self, **kwargs):
         self._make_selector(kwargs.pop('msg'))
         self._selected = None
         super(FileOptionCard, self).__init__(**kwargs)
 
-    def _default_location(self):
-        return os.path.expanduser('~')
-
     def _drop_handler(self, _, filename):
-        if self.collide_point(*Window.mouse_pos):
-            self._selected = filename.decode('utf-8')
-            self.lock()
-            App.get_running_app().deregister_drop_handler(self._drop_handler)
+        # if self.collide_point(*Window.mouse_pos):
+        self._selected = filename.decode('utf-8')
+        self.lock()
+        App.get_running_app().deregister_drop_handler(self._drop_handler)
 
     def _make_selector(self, msg):
         self._selector = Button(text=msg, size_hint_y=0.27)
         content = BoxLayout(orientation='vertical')
 
-        _file_chooser = FileChooserListView(path=self._default_location())
+        _file_chooser = FileChooserListView(path=self._default_location)
         content.add_widget(_file_chooser)
         _button_ok = Button(text='OK', size_hint_y=0.1)
         content.add_widget(_button_ok)
@@ -332,6 +337,124 @@ class DropHandler(object):
         self._drops.remove(handler)
 
     def handle_drops(self, *args):
-        print(args)
         for func in self._drops:
             func(*args)
+
+
+class ProgressCard(ColorBoxLayout):
+    _color1 = (226.0 / 255, 225.0 / 255, 224.0 / 255, 255.0 / 255)
+    _tcolor = (0.1, 0.1, 0.1, 1)
+
+    def __init__(self, **kwargs):
+        _icon_source = kwargs.pop('icon')
+        self._start_time = None
+        self._end_time = None
+        self._time_taken = None
+        self._info_msg = kwargs.pop('info_msg')
+        self._units = kwargs.pop('units')
+        self._max = None
+        self._icon = Image(source=_icon_source)
+        self._info_container = BoxLayout(orientation='horizontal')
+        self._prog_note = ''
+        self._eta_msg = ''
+        self._extra_info = ''
+        self._done = 0
+        self._extended_info = None
+        self._info_label = Label(text=self._label_string(),
+                                 color=self._tcolor, markup=True,
+                                 halign='right', valign='middle')
+        self._info_label.bind(size=self._info_label.setter('text_size'))
+        self._info_container.add_widget(self._icon)
+        self._info_container.add_widget(self._info_label)
+        self._progressbar = None
+        super(ProgressCard, self).__init__(
+            orientation='vertical', size_hint_y=0.27,
+            bgcolor=self._color1, padding=(20, 10), **kwargs
+        )
+        self.add_widget(self._info_container)
+
+    def _label_string(self):
+        rstr = "[size=16][b]{0}[/b][/size]".format(self._info_msg)
+        if self._prog_note:
+            rstr += "\n[size=12]{0}[/size]".format(self._prog_note)
+        if self._eta_msg:
+            rstr += "\n[size=12]{0}[/size]".format(self._eta_msg)
+        return rstr
+
+    def _update_label_string(self):
+        self._info_label.text = self._label_string()
+
+    def start(self, maximum):
+        self._start_time = datetime.now()
+        self._max = maximum
+        self._progressbar = ProgressBar(max=maximum, size_hint_y=0.1)
+        self.add_widget(self._progressbar)
+
+    def _info_label_text(self):
+        return "{0} Done\n[size=10]{1} {2} in {3}{4}[/size]" \
+               "".format(self._info_msg, self._max,
+                         self._units, self._time_taken, self._extra_info)
+
+    def finish(self):
+        self._end_time = datetime.now()
+        self.remove_widget(self._progressbar)
+        self.padding = 5
+        anim = Animation(size_hint_y=0.1, duration=.4)
+        anim.start(self)
+        anim = Animation(size_hint_x=0.3, duration=.4)
+        anim.start(self._icon)
+        self.orientation = 'horizontal'
+        self._time_taken = timedelta(
+            seconds=int((self._end_time - self._start_time).total_seconds())
+        )
+        self._info_label.text = self._info_label_text()
+        if self._extended_info:
+            self._extended_info_icon = ImageButton(
+                source=os.path.join(asset_path, 'info.png'),
+                size_hint_x=0.2)
+            title, content = self._extended_info()
+            dismissbutton = Button(text='OK', size_hint_y=0.2)
+            content.add_widget(dismissbutton)
+            _msg_box = Popup(title=title, content=content, size_hint=(1, 0.5))
+            dismissbutton.bind(on_release=_msg_box.dismiss)
+            self._extended_info_icon.bind(on_release=_msg_box.open)
+        else:
+            self._extended_info_icon = Widget(size_hint_x=0.2)
+        self._info_container.add_widget(self._extended_info_icon)
+
+    @property
+    def progress(self):
+        return None
+
+    @progress.setter
+    def progress(self, value):
+        self._prog_note, index, self._eta_msg = value
+        self._progressbar.value = index
+        self._update_label_string()
+
+    def extra_finish_info(self, infostr):
+        self._extra_info = infostr
+        self._info_label.text = self._info_label_text()
+
+
+class KivyProgressBar(Progress):
+    def __init__(self, monitor, *args, **kwargs):
+        super(KivyProgressBar, self).__init__(*args, **kwargs)
+        self._monitor = monitor
+        self.start()
+
+    @mainthread
+    def start(self):
+        super(KivyProgressBar, self).start()
+        self._monitor.start(self.max)
+
+    @mainthread
+    def next(self, n=1, note=''):
+        super(KivyProgressBar, self).next(n)
+        self._monitor.progress = (note, self.index,
+                                  "ETA {0}".format(self.eta_td))
+
+    @mainthread
+    def finish(self):
+        self._monitor.finish()
+        super(KivyProgressBar, self).finish()

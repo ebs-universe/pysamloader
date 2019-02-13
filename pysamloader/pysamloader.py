@@ -153,7 +153,7 @@ def verify(samba, device, filename, start_page=0, progress_class=None):
     errors = 0
     byte_address = 0
     if progress_class:
-        p = progress_class(max=len_bytes/4)
+        p = progress_class(max=len_bytes)
     else:
         p = None
     logger.info("Verifying Flash")
@@ -162,7 +162,7 @@ def verify(samba, device, filename, start_page=0, progress_class=None):
     word.reverse()
     while reversed_word:
         if p:
-            p.next(note="{0}/{1} Bytes".format(byte_address, len_bytes))
+            p.next(n=4, note="{0}/{1} Bytes".format(byte_address, len_bytes))
         actual = samba.read_word(hex(address)[2:].zfill(8)).strip()
         if PY2:
             expected = hexlify(word)

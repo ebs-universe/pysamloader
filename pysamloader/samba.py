@@ -62,6 +62,11 @@ class SamBAConnection(object):
         while char != '>':
             data += char
             char = self.ser.read(1).decode()
+            if not char:
+                self.ser.close()
+                raise SamBAConnectionError(
+                    "Read byte timed out on SAM-BA. Check your connections "
+                    "and device configuration and retry.")
         logger.debug("Got response : {0}".format(data.strip()))
         return data
 
@@ -93,7 +98,11 @@ class SamBAConnection(object):
         if resp:
             return
         else:
+            self.ser.close()
             raise SamBAConnectionError("SAM-BA did not respond to V#")
+
+    def close(self):
+        self.ser.close()
 
     def flush_all(self):
         """ Flush serial communication buffers  """
