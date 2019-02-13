@@ -23,6 +23,14 @@
     <Content Include="docs\index.rst" />
     <Content Include="docs\Makefile" />
     <Content Include="pysamloader.spec" />
+    <Content Include="pysamloader\assets\binary.png" />
+    <Content Include="pysamloader\assets\connectors.png" />
+    <Content Include="pysamloader\assets\finish.png" />
+    <Content Include="pysamloader\assets\info.png" />
+    <Content Include="pysamloader\assets\logo-full.png" />
+    <Content Include="pysamloader\assets\sam-ic.png" />
+    <Content Include="pysamloader\assets\verify.png" />
+    <Content Include="pysamloader\assets\write.png" />
     <Content Include="README.rst" />
   </ItemGroup>
   <ItemGroup>
@@ -34,18 +42,25 @@
     <Compile Include="pysamloader\devices\ATSAM3U4E.py" />
     <Compile Include="pysamloader\devices\__init__.py" />
     <Compile Include="pysamloader\efcdescriptor.py" />
+    <Compile Include="pysamloader\gui\app.py" />
+    <Compile Include="pysamloader\gui\widgets.py" />
+    <Compile Include="pysamloader\gui\__init__.py" />
+    <Compile Include="pysamloader\log.py" />
     <Compile Include="pysamloader\pysamloader.py" />
     <Compile Include="pysamloader\samba.py" />
     <Compile Include="pysamloader\samdevice.py" />
     <Compile Include="pysamloader\terminal.py" />
     <Compile Include="pysamloader\__init__.py" />
     <Compile Include="run.py" />
+    <Compile Include="rungui.py" />
     <Compile Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="docs" />
     <Folder Include="pysamloader" />
+    <Folder Include="pysamloader\assets\" />
     <Folder Include="pysamloader\devices" />
+    <Folder Include="pysamloader\gui\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.6" />
