@@ -25,13 +25,15 @@ import argparse
 from serial.tools import list_ports
 
 from .terminal import ProgressBar
+from .samba import SamBAConnection
+from .pysamloader import write
+from .pysamloader import verify
+from .pysamloader import set_boot
 from .pysamloader import get_device
 from .pysamloader import get_supported_devices
-from .pysamloader import write_and_verify
 from .pysamloader import read_chipid
 from .pysamloader import read_flash_descriptors
 from .pysamloader import read_unique_identifier
-from .pysamloader import set_boot_from_flash
 from . import __version__
 
 from . import log
@@ -66,6 +68,28 @@ def print_flash_descriptors(*args, **kwargs):
 def print_unique_identifier(*args, **kwargs):
     uid = read_unique_identifier(*args, **kwargs)
     print(uid)
+
+
+def write_and_verify(args, progress_class=None):
+    samba = SamBAConnection(port=args.port, baud=args.baud, device=args.device)
+    if not args.nw:
+        write(samba, args.device, args.filename, progress_class=progress_class)
+    errors = None
+    if not args.nv:
+        errors = verify(samba, args.device, args.filename,
+                        progress_class=progress_class)
+    if not errors and args.g:
+        set_boot(samba, args.device)
+    else:
+        logger.warning("Not setting GPNVM bit.")
+        logger.warning("Invoke with -g to have that happen.")
+
+
+def set_boot_from_flash(*args, **kwargs):
+    samba = kwargs.pop('samba', None)
+    if not samba:
+        samba = SamBAConnection(*args, **kwargs)
+    return set_boot(samba, kwargs['device'])
 
 
 def _get_parser():

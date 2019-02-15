@@ -195,28 +195,6 @@ def set_boot(samba, device):
             samba.efc_cleargpnvm(i)
 
 
-def write_and_verify(args, progress_class=None):
-    samba = SamBAConnection(port=args.port, baud=args.baud, device=args.device)
-    if not args.nw:
-        write(samba, args.device, args.filename, progress_class=progress_class)
-    errors = None
-    if not args.nv:
-        errors = verify(samba, args.device, args.filename,
-                        progress_class=progress_class)
-    if not errors and args.g:
-        set_boot(samba, args.device)
-    else:
-        logger.warning("Not setting GPNVM bit.")
-        logger.warning("Invoke with -g to have that happen.")
-
-
-def set_boot_from_flash(*args, **kwargs):
-    samba = kwargs.pop('samba', None)
-    if not samba:
-        samba = SamBAConnection(*args, **kwargs)
-    return set_boot(samba, kwargs['device'])
-
-
 def read_chipid(*args, **kwargs):
     samba = kwargs.pop('samba', None)
     if not samba:
