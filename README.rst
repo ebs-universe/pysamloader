@@ -44,6 +44,13 @@ Features
 Requirements & Installation
 ---------------------------
 
+.. attention::
+    You might want to take a look at the
+    `pysamloader-gui <https://github.com/chintal/pysamloader-gui>` package
+    as well. It provides a simple GUI. If you are using the binary packages,
+    it can be installed and used independent of this.
+
+
 ``pysamloader`` should work on any platform which supports ``python``. It is 
 best tested on Linux followed by on Windows (10 and 7).
 
@@ -134,7 +141,6 @@ Future Directions
    for SAM-BA - that is too dangerous. Instead rely on apriori knowledge of
    signatures of device configuration, including VID, PID, Manufacturer,
    Product, Serial Number, and USB endpoint descriptors.
- - Add a clean and simple GUI.
 
 Links
 .....
