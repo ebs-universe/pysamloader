@@ -51,7 +51,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:pysamloader-0.4.2-amd64.msi"
+        "OutputFilename" = "8:pysamloader-0.5.0-amd64.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -68,6 +68,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    }
+                }
             }
         }
         "Release"
@@ -75,7 +83,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:pysamloader-0.4.2-amd64.msi"
+        "OutputFilename" = "8:pysamloader-0.5.0-amd64.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -322,15 +330,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:pysamloader"
-        "ProductCode" = "8:{FAB8E515-B620-42E8-807B-FAD0A81D8966}"
-        "PackageCode" = "8:{2C2FA9B0-4F8E-427D-91E4-5BDDCF6B3AB0}"
+        "ProductCode" = "8:{22196AB1-A789-43C9-BDD8-95230CD032CB}"
+        "PackageCode" = "8:{886B1E1F-EDE4-4026-B717-F0BAD71AB1FA}"
         "UpgradeCode" = "8:{340D1929-05F1-46C7-A3ED-C480E89865A4}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.4.2"
+        "ProductVersion" = "8:0.5.0"
         "Manufacturer" = "8:Quazar Technologies"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
