@@ -5,7 +5,11 @@ VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "pysamloader", "pysamloader.pyproj", "{0986A3D7-1748-4D5B-8EE2-7BA6A0F2DEA4}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "windows", "packaging\windows\windows.vdproj", "{4A505F54-5B6A-4B8B-A30F-AFF5CF39458A}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "windows-cli", "packaging\windows\windows.vdproj", "{4A505F54-5B6A-4B8B-A30F-AFF5CF39458A}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "pysamloader-gui", "..\pysamloader-gui\pysamloader-gui.pyproj", "{56F02873-D445-47B4-9857-FBFD78852AC6}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "windows-gui", "..\pysamloader-gui\packaging\windows\windows-gui.vdproj", "{3F259657-69E4-47EC-B384-A3206D06252E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +27,18 @@ Global
 		{4A505F54-5B6A-4B8B-A30F-AFF5CF39458A}.Debug|x86.ActiveCfg = Debug
 		{4A505F54-5B6A-4B8B-A30F-AFF5CF39458A}.Release|Any CPU.ActiveCfg = Release
 		{4A505F54-5B6A-4B8B-A30F-AFF5CF39458A}.Release|x86.ActiveCfg = Release
+		{56F02873-D445-47B4-9857-FBFD78852AC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56F02873-D445-47B4-9857-FBFD78852AC6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{56F02873-D445-47B4-9857-FBFD78852AC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56F02873-D445-47B4-9857-FBFD78852AC6}.Release|x86.ActiveCfg = Release|Any CPU
+		{3F259657-69E4-47EC-B384-A3206D06252E}.Debug|Any CPU.ActiveCfg = Debug
+		{3F259657-69E4-47EC-B384-A3206D06252E}.Debug|Any CPU.Build.0 = Debug
+		{3F259657-69E4-47EC-B384-A3206D06252E}.Debug|x86.ActiveCfg = Debug
+		{3F259657-69E4-47EC-B384-A3206D06252E}.Debug|x86.Build.0 = Debug
+		{3F259657-69E4-47EC-B384-A3206D06252E}.Release|Any CPU.ActiveCfg = Release
+		{3F259657-69E4-47EC-B384-A3206D06252E}.Release|Any CPU.Build.0 = Release
+		{3F259657-69E4-47EC-B384-A3206D06252E}.Release|x86.ActiveCfg = Release
+		{3F259657-69E4-47EC-B384-A3206D06252E}.Release|x86.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -87,12 +87,12 @@ _binary_dist_folder = os.path.join(
     _dist_folder, 'binary-{0}'.format(platform.system().lower()))
 _executable_name = SCRIPT_NAME + executable_ext
 _executable_path = os.path.join(_binary_dist_folder, _executable_name)
-_binary_package_name = "{0}-{1}-{2}-{3}{4}".format(
-    SCRIPT_NAME, SCRIPT_VERSION,
+_binary_package_name = "{0}{1}-{2}-{3}-{4}{5}".format(
+    SCRIPT_NAME, '-cli', SCRIPT_VERSION,
     platform.system().lower(), platform.machine().lower(), package_ext)
 _binary_package_path = os.path.join(_binary_dist_folder, _binary_package_name)
-_installer_name = "{0}-{1}-{2}{3}".format(SCRIPT_NAME, SCRIPT_VERSION, 
-                                          platform.machine().lower(), installer_ext)
+_installer_name = "{0}{1}-{2}-{3}{4}".format(SCRIPT_NAME, '-cli', SCRIPT_VERSION, 
+                                             platform.machine().lower(), installer_ext)
 _installer_path = os.path.join(_base_folder, 'packaging', 
                                platform.system().lower(), _installer_name)
 _sdist_name = '{0}-{1}.tar.gz'.format(SCRIPT_NAME, SCRIPT_VERSION)
