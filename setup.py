@@ -27,6 +27,7 @@ def read(fname):
         content += line
     return content
 
+
 core_dependencies = [
     'six',
     'appdirs',

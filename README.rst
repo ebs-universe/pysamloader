@@ -11,8 +11,8 @@
 .. image:: https://img.shields.io/coveralls/github/ebs-universe/pysamloader.svg?logo=coveralls
     :target: https://coveralls.io/github/ebs-universe/pysamloader
 
-.. image:: https://img.shields.io/requires/ebs-universe/pysamloader.svg
-    :target: https://requires.io/github/ebs-universe/pysamloader
+.. image:: https://img.shields.io/requires/github/ebs-universe/pysamloader.svg
+    :target: https://requires.io/github/ebs-universe/pysamloader/requirements
 
 .. image:: https://img.shields.io/pypi/l/pysamloader.svg
     :target: https://www.gnu.org/licenses/gpl-3.0.en.html
@@ -201,7 +201,7 @@ The latest version of the sources can be found at
 `GitHub <https://github.com/ebs-universe/pysamloader>`_. Please use GitHub's features
 to report bugs, request features, or submit pull/merge requests.
 
-The principle author for ``fpvgcc`` is Chintalagiri Shashank. The author can
+The principle author for ``pysamloader`` is Chintalagiri Shashank. The author can
 be contacted if necessary via the information on the
 `author's github profile <https://github.com/chintal>`_ . See the AUTHORS file
 for a full list of collaborators and/or contributing authors, if any.
