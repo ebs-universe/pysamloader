@@ -209,24 +209,3 @@ for a full list of collaborators and/or contributing authors, if any.
 ``pysamloader`` is distributed under the terms of the
 `GPLv3 license <https://www.gnu.org/licenses/gpl-3.0-standalone.html>`_ .
 A copy of the text of the license is included along with the sources.
-
-.. tabularcolumns:: >{\raggedleft\arraybackslash}\Y{0.1} >{\raggedright\arraybackslash}\Y{0.5}
-
-.. list-table::
-    :widths: 8 40
-    :header-rows: 0
-
-
-    * -
-        .. figure:: _static/logo_packed.png
-                :align: right
-      -
-        .. raw:: latex
-
-            \vspace{-1.5em}
-
-        ``pysamloader`` is part of the EBS universe of packages and tools for constrained embedded systems
-
-.. raw:: latex
-
-      \clearpage
