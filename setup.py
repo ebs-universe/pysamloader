@@ -57,6 +57,8 @@ setup(
     author_email="shashank@chintal.in",
     description="python library for writing flash on "
                 "Atmel's ARM chips via SAM-BA.",
+    long_description='\n'.join([read('README.rst'), read('CHANGELOG.rst')]),
+    long_description_content_type='text/x-rst',
     keywords="utilities",
     url="https://github.com/chintal/pysamloader",
     project_urls={
