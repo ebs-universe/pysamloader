@@ -113,7 +113,7 @@ def _get_terminal_size_windows():
             return sizex, sizey
     except (KeyboardInterrupt, SystemExit):
         raise
-    except:
+    except:  # noqa
         pass
 
 
@@ -125,7 +125,7 @@ def _get_terminal_size_tput():
         return cols, rows
     except (KeyboardInterrupt, SystemExit):
         raise
-    except:
+    except:  # noqa
         pass
 
 
@@ -139,7 +139,7 @@ def _get_terminal_size_linux():
             return cr
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except:  # noqa
             pass
     cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
     if not cr:
@@ -149,14 +149,14 @@ def _get_terminal_size_linux():
             os.close(fd)
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except:  # noqa
             pass
     if not cr:
         try:
             cr = (os.environ['LINES'], os.environ['COLUMNS'])
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except:  # noqa
             return None
     return int(cr[1]), int(cr[0])
 

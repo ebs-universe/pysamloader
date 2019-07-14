@@ -1,6 +1,32 @@
 
-pysamloader
-===========
+.. image:: https://img.shields.io/pypi/v/pysamloader.svg?logo=pypi
+    :target: https://pypi.org/project/pysamloader
+
+.. image:: https://img.shields.io/pypi/pyversions/pysamloader.svg?logo=pypi
+    :target: https://pypi.org/project/pysamloader
+
+.. image:: https://img.shields.io/travis/ebs-universe/pysamloader.svg?logo=travis
+    :target: https://travis-ci.org/ebs-universe/pysamloader
+
+.. image:: https://img.shields.io/coveralls/github/ebs-universe/pysamloader.svg?logo=coveralls
+    :target: https://coveralls.io/github/ebs-universe/pysamloader
+
+.. image:: https://img.shields.io/requires/ebs-universe/pysamloader.svg
+    :target: https://requires.io/github/ebs-universe/pysamloader
+
+.. image:: https://img.shields.io/pypi/l/pysamloader.svg
+    :target: https://www.gnu.org/licenses/gpl-3.0.en.html
+
+
+
+.. inclusion-marker-do-not-remove
+
+.. raw:: latex
+
+       \vspace*{\fill}
+
+Introduction
+------------
 
 ``pysamloader`` is a python library for writing flash on Atmel's ARM chips
 via SAM-BA. Originally written years ago when Atmel's standard tools were
@@ -29,6 +55,13 @@ Currently supported devices are :
     :listobject: pysamloader.pysamloader.supported_devices
     :header: "Device" "Interface"
 
+.. raw:: latex
+
+    \clearpage
+    \tableofcontents
+    \clearpage
+
+
 Features
 --------
 
@@ -41,12 +74,16 @@ Features
     - Read Unique Identifier from Embedded Flash
     - Read Flash Descriptor
 
+.. raw:: latex
+
+       \vspace*{\fill}
+
 Requirements & Installation
 ---------------------------
 
 .. attention::
     You might want to take a look at the
-    `pysamloader-gui <https://github.com/chintal/pysamloader-gui>` package
+    `pysamloader-gui <https://github.com/chintal/pysamloader-gui>`_ package
     as well. It provides a simple GUI. If you are using the binary packages,
     it can be installed and used independent of this.
 
@@ -96,6 +133,11 @@ The current ``pysamloader`` windows .msi installer will create this folder and
 populate it as a part of the install process. 
 
 
+.. raw:: latex
+
+       \vspace*{\fill}
+
+
 Usage
 -----
 
@@ -118,6 +160,12 @@ obtained on the command line with ``pysamloader --help``.
     :func: _get_parser
     :prog: pysamloader
     :nodefault:
+
+
+.. raw:: latex
+
+       \vspace*{\fill}
+
 
 Links & Other Information
 -------------------------
@@ -147,14 +195,38 @@ Links
 
 The latest version of the documentation, including installation, usage, and
 API/developer notes can be found at
-`ReadTheDocs <http://pysamloader.readthedocs.org/en/latest/index.html>`_.
+`ReadTheDocs <https://pysamloader.readthedocs.io/en/latest/index.html>`_.
 
 The latest version of the sources can be found at
-`GitHub <https://github.com/chintal/pysamloader>`_. Please use GitHub's features
+`GitHub <https://github.com/ebs-universe/pysamloader>`_. Please use GitHub's features
 to report bugs, request features, or submit pull/merge requests.
+
+The principle author for ``fpvgcc`` is Chintalagiri Shashank. The author can
+be contacted if necessary via the information on the
+`author's github profile <https://github.com/chintal>`_ . See the AUTHORS file
+for a full list of collaborators and/or contributing authors, if any.
 
 ``pysamloader`` is distributed under the terms of the
 `GPLv3 license <https://www.gnu.org/licenses/gpl-3.0-standalone.html>`_ .
 A copy of the text of the license is included along with the sources.
 
-I can be reached directly by email at shashank at chintal dot in.
+.. tabularcolumns:: >{\raggedleft\arraybackslash}\Y{0.1} >{\raggedright\arraybackslash}\Y{0.5}
+
+.. list-table::
+    :widths: 8 40
+    :header-rows: 0
+
+
+    * -
+        .. figure:: _static/logo_packed.png
+                :align: right
+      -
+        .. raw:: latex
+
+            \vspace{-1.5em}
+
+        ``pysamloader`` is part of the EBS universe of packages and tools for constrained embedded systems
+
+.. raw:: latex
+
+      \clearpage

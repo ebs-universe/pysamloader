@@ -44,9 +44,10 @@ class SamBAConnection(object):
         self.ser.timeout = 1
         try:
             self.ser.open()
-        except:
-            raise SamBAConnectionError("Unable to open serial port.\
-                                       \nCheck your connections and try again.")
+        except:  # noqa
+            raise SamBAConnectionError(
+                "Unable to open serial port.\n\
+                Check your connections and try again.")
         if not device:
             self._device = SAMDevice()
         else:
@@ -84,7 +85,7 @@ class SamBAConnection(object):
                 self.ser.write('#')
                 sleep(0.001)
                 resp = self.ser.read(1).decode()
-                if resp is '>':
+                if resp == '>':
                     status = 1
                     logger.info("SAM-BA Auto-Baud Successful")
         self.flush_all()

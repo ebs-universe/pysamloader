@@ -9,10 +9,13 @@ dist/
 .doit.db*
 .eggs/
 env-pysamloader/
-pysamloader/_version.py
+src/pysamloader/_version.py
 .vs/
 .vscode/
 *__pycache__
 /.release_token
 packaging/windows/*.exe
 packaging/windows/*.msi
+.coverage
+.tox
+

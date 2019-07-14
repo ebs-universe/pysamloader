@@ -98,10 +98,14 @@ def _get_parser():
 
     parser.add_argument('-v', action='store_true',
                         help="Verbose debug information")
-    parser.add_argument('-P', '--port', metavar='port', default="/dev/ttyUSB1",
-                        help="Port on which SAM-BA is listening. Default /dev/ttyUSB1"),
-    parser.add_argument('-b', '--baud', metavar='baud', type=int, default=115200,
-                        help="Baud rate of serial communication. Default 115200"),
+    parser.add_argument('-P', '--port', metavar='port',
+                        default="/dev/ttyUSB1",
+                        help="Port on which SAM-BA is listening. "
+                             "Default /dev/ttyUSB1"),
+    parser.add_argument('-b', '--baud', metavar='baud', type=int,
+                        default=115200,
+                        help="Baud rate of serial communication. "
+                             "Default 115200"),
     parser.add_argument('-d', '--device', metavar='device',
                         help="Atmel SAM Device. Default ATSAM3U4E")
 

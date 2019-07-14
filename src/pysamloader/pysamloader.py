@@ -102,7 +102,8 @@ def _file_writer(_writer, samba, device, filename,
     logger.info("Writing to Flash")
     while stat:
         samba.efc_wready()
-        page_address = int(device.FS_ADDRESS, 16) + (page_no * device.PAGE_SIZE)
+        page_address = int(device.FS_ADDRESS, 16) + \
+            (page_no * device.PAGE_SIZE)
         adrstr = hex(page_address)[2:].zfill(8)
         logger.debug("Start Address of page {0} : {1}".format(page_no, adrstr))
         stat = _page_writer(_writer, samba, device, page_address, bin_file)
@@ -132,7 +133,7 @@ def write(samba, device, filename, progress_class=None):
     enable_xmodem = False
     if enable_xmodem:
         # See device errata in 3U4E datasheet
-        original = samba.efc_readfmr().strip()[2:]
+        _ = samba.efc_readfmr().strip()[2:]
         samba.efc_setfmr('00000600')
         xmodem_sendf(samba, device, filename,
                      progress_class=progress_class)
@@ -144,8 +145,7 @@ def write(samba, device, filename, progress_class=None):
 def verify(samba, device, filename, start_page=0, progress_class=None):
     """
     Verify the contents of flash against the contents of the file.
-    Returns the total number of words with errors. 
-
+    Returns the total number of words with errors.
     """
     bin_file = open(filename, "rb")
     len_bytes = os.fstat(bin_file.fileno())[6]
@@ -218,7 +218,10 @@ def read_unique_identifier(*args, **kwargs):
 
 def _get_device_folder():
     devices_folder_candidates = [
-        os.path.join(appdirs.user_config_dir('pysamloader', appauthor='Quazar Technologies', roaming=True), 'devices'),
+        os.path.join(appdirs.user_config_dir('pysamloader',
+                                             appauthor='Quazar Technologies',
+                                             roaming=True),
+                     'devices'),
         os.path.join(os.path.split(__file__)[0], 'devices')
     ]
     for candidate in devices_folder_candidates:

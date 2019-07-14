@@ -22,7 +22,7 @@ DOIT_CONFIG = {
 
 SCRIPT_NAME = 'pysamloader'
 SCRIPT_VERSION = get_version(root='.', relative_to=__file__)
-GITHUB_PATH = 'chintal/{0}'.format(SCRIPT_NAME)
+GITHUB_PATH = 'ebs-universe/{0}'.format(SCRIPT_NAME)
 
 # Platform and Build Environment Information
 # ------------------------------------------
@@ -107,8 +107,8 @@ _doc_path = os.path.join(_base_folder, 'docs', '_build', 'latex', _doc_name)
 
 def _inject_version():
     # Build version file for injection into the binary
-    with open(os.path.join(_base_folder, SCRIPT_NAME, '_version.py'), 'w') as f:
-        f.write('__version__ = "{0}"'.format(SCRIPT_VERSION))
+    with open(os.path.join(_base_folder, 'src', SCRIPT_NAME, '_version.py'), 'w') as f:
+        f.write('__version__ = "{0}"\n'.format(SCRIPT_VERSION))
 
 
 def _clean_work_folder():
@@ -125,7 +125,7 @@ def task_setup_build():
             (create_folder, [_work_folder])
         ],
         'targets': [
-            os.path.join(_base_folder, SCRIPT_NAME, '_version.py'),
+            os.path.join(_base_folder, 'src', SCRIPT_NAME, '_version.py'),
             _dist_folder,
         ],
         'clean': [_clean_work_folder, clean_targets]
@@ -155,7 +155,7 @@ def _create_binary_package():
         (os.path.join(_binary_dist_folder, _executable_name), _executable_name),
         (os.path.join(_base_folder, 'LICENSE'), 'LICENSE'),
         (_doc_path, _doc_name),
-        (os.path.join(_base_folder, 'pysamloader', 'devices'), 'devices'),
+        (os.path.join(_base_folder, 'src', 'pysamloader', 'devices'), 'devices'),
     ]
 
     def _filter_py(tarinfo):
