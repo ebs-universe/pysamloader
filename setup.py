@@ -24,6 +24,12 @@ def read(fname):
         elif line.strip() == '.. raw:: latex':
             in_raw_directive = 2
             continue
+        elif line.strip() == '.. documentedlist::':
+            in_raw_directive = 2
+            continue
+        elif line.strip() == '.. argparse::':
+            in_raw_directive = 2
+            continue
         content += line
     return content
 
